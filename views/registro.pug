@@ -1,0 +1,31 @@
+doctype html
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        title Document
+    body 
+        form.row.g-3(method="POST" action="/registro")
+            .col-md-12
+                label.form-label(for="inputNombre") Nombre de usuario
+                input.form-control(type="text" id="inputNombre" name="username" placeholder="Ej: juanperez123", required)
+
+            .col-md-6
+                label.form-label(for="inputEmail") Correo electrónico
+                input.form-control(type="email" id="inputEmail" name="email" placeholder="correo@ejemplo.com", required)
+
+            .col-md-6
+                label.form-label(for="inputPassword") Contraseña
+                input.form-control(type="password" id="inputPassword_hash" name="password_hash" placeholder="Mínimo 6 caracteres", required)
+
+            .col-12
+                label.form-label(for="inputConfirmPassword") Confirmar contraseña
+                input.form-control(type="password" id="inputConfirmPassword" name="confirmPassword" placeholder="Repite tu contraseña", required)
+
+            .col-12
+                button.btn.btn-primary(type="submit") Registrarse
+
+            .col-12
+                p.text-muted 
+                    | ¿Ya tienes cuenta? 
+                    a(href="/login") Inicia sesión aquí

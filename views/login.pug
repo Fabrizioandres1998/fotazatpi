@@ -2,8 +2,22 @@ doctype html
 html(lang="en")
   head
     meta(charset="UTF-8")
-    meta(name="viewport", content="width=device-width, initial-scale=1.0")
-    title Document
-  body ddasdasdasdasdasdas
-  h1 asdasdas
-  h2 asdasdasda
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Iniciar Sesión
+  body 
+    form.row.g-3(method="POST" action="/login")
+      .col-md-12
+        label.form-label(for="email") Correo electrónico
+        input.form-control(type="email" id="email" name="email" placeholder="correo@ejemplo.com", required)
+
+      .col-md-12
+        label.form-label(for="password") Contraseña
+        input.form-control(type="password" id="password" name="password_hash" placeholder="Tu contraseña", required)
+
+      .col-12
+        button.btn.btn-primary(type="submit") Iniciar Sesión
+
+      .col-12
+        p.text-muted 
+          | ¿No tienes cuenta? 
+          a(href="/registro") Regístrate aquí
