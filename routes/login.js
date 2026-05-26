@@ -22,11 +22,13 @@ router.post('/', async (req, res) => {
 
     const passwordValida = await bcrypt.compare(password_hash, usuario.password_hash);
 
-    if (passwordValida) {
-      return res.send('Login exitoso')
-    } else {
+    if (!passwordValida) {
       return res.send('Contraseña incorrecta');
     }
+
+    req.session.usuarioId = usuario.id;
+    console.log(req.session);
+    res.send('Login correcto');
 
   } catch (error) {
     console.error(error);
