@@ -9,6 +9,7 @@ var logoutRouter = require('./routes/logout');
 var registroRouter = require('./routes/registro');
 var perfilRouter = require('./routes/perfil');
 const session = require('express-session');
+const { Usuario } = require('./models');
 
 var app = express();
 
@@ -26,11 +27,24 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }));
+app.use(async (req, res, next) => {
+
+  if (req.session.usuarioId) {
+
+    const usuario = await Usuario.findByPk(
+      req.session.usuarioId
+    );
+
+    res.locals.usuario = usuario;
+  }
+
+  next();
+});
 
 app.use('/login', loginRouter);
 app.use('/registro', registroRouter);
 app.use('/logout', logoutRouter);
-app.use('/perfil', perfilRouter)
+app.use('/perfil', perfilRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

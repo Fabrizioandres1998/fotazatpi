@@ -1,11 +1,15 @@
 let express = require('express');
 let router = express.Router();
 
-router.get('/', function(req, res, next) {
-  res.render('logout', { title: 'Cerrar sesion' });
+router.get("/", (req, res) => {
+  res.render('logout');
 });
 
-router.post('/', function(req, res, next) {
+router.post("/", (req, res) => {
+
+  req.session.destroy(() => {
+    res.send("Logout correcto");
+  });
 
 });
 

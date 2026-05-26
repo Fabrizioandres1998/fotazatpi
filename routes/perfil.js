@@ -1,12 +1,10 @@
 const express = require('express')
 const router = express.Router()
 
-router.get('/', async (req, res, next) => {
-    const autenticado = req.session.usuarioId;
-    if(!autenticado) {
-        return res.send('usuario no autenticadoo')
-    }
-    res.send('usuario autenticado')
+const authMiddleware = require('../middlewares/authMiddleware', 'authMiddleware')
+
+router.get('/', authMiddleware, async (req, res, next) => {
+    res.render('perfil');
 })
 
 module.exports = router
