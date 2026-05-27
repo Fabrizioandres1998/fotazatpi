@@ -1,0 +1,32 @@
+doctype html
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        title Crear Publicación
+    body 
+        form.row.g-3(method="POST" action="/publicacion/crear")
+            .col-12
+                label.form-label(for="inputTitulo") Título
+                input.form-control(type="text" id="inputTitulo" name="titulo" placeholder="Título de la publicación", required)
+
+            .col-12
+                label.form-label(for="inputDescripcion") Descripción
+                textarea.form-control(id="inputDescripcion" name="descripcion" rows="5" placeholder="Escribe aquí el contenido de tu publicación...", required)
+
+            .col-12
+                label.form-label(for="inputUrl") URL de la imagen
+                input.form-control(type="url" id="inputUrl" name="url" placeholder="https://ejemplo.com/imagen.jpg")
+
+            .col-12
+                label.form-label(for="inputLicencia") Tipo de licencia
+                select.form-control(id="inputLicencia" name="licencia" required)
+                    option(value="") Selecciona...
+                    option(value="copyright") Copyright (todos los derechos reservados)
+                    option(value="sin_copyright") Sin copyright (dominio público / libre)
+
+            .col-12
+                button.btn.btn-primary(type="submit") Publicar
+
+            .col-12
+                a(href="/perfil") Volver a mi perfil

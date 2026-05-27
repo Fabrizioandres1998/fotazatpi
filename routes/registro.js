@@ -13,7 +13,7 @@ router.post('/', async (req, res, next) => {
 
         const { username, email, password_hash, confirmPassword } = req.body;
 
-        if (password !== confirmPassword) {
+        if (password_hash !== confirmPassword) {
             return res.render('registro', {
                 title: 'Registrarse',
                 error: 'Las contraseñas no coinciden'

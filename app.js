@@ -4,12 +4,15 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-var loginRouter = require('./routes/login');
-var logoutRouter = require('./routes/logout');
-var registroRouter = require('./routes/registro');
-var perfilRouter = require('./routes/perfil');
 const session = require('express-session');
 const { Usuario } = require('./models');
+
+//IMPORTACION RUTAS
+const loginRouter = require('./routes/login');
+const logoutRouter = require('./routes/logout');
+const registroRouter = require('./routes/registro');
+const perfilRouter = require('./routes/perfil');
+const crearPublicacionRouter = require('./routes/crearPublicacion');
 
 var app = express();
 
@@ -41,10 +44,12 @@ app.use(async (req, res, next) => {
   next();
 });
 
+//USE DE LAS RUTAS
 app.use('/login', loginRouter);
 app.use('/registro', registroRouter);
 app.use('/logout', logoutRouter);
 app.use('/perfil', perfilRouter);
+app.use('/publicacion', crearPublicacionRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
