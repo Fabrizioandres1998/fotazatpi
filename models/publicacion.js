@@ -12,11 +12,16 @@ module.exports = (sequelize, DataTypes) => {
       Publicacion.hasMany(models.Imagen, {
         foreignKey: "id_publicacion",
         as: "imagenes"
-
+      });
+      Publicacion.belongsToMany(models.Etiqueta, {
+        through: 'publicacion_etiqueta',
+        foreignKey: 'id_publicacion',
+        otherKey: 'id_etiqueta',
+        as: 'etiquetas'
       });
     }
   }
-  
+
   Publicacion.init({
     titulo: {
       type: DataTypes.STRING,
@@ -39,6 +44,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Publicacion',
     tableName: 'publicacion'
   });
-  
+
   return Publicacion;
 };

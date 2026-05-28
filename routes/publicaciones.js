@@ -1,26 +1,38 @@
 const express = require('express');
 const router = express.Router();
-const { Publicacion, Imagen, Usuario } = require('../models');
+const { Publicacion, Imagen, Usuario, Etiqueta } = require('../models');
 
-router.get('/', async (req, res, next) => {
+router.get('/', async (req, res) => {
+
     try {
+
         const publicaciones = await Publicacion.findAll({
             include: [
                 {
                     model: Imagen,
                     as: "imagenes"
                 },
-                Usuario
+                Usuario,
+                {
+                    model: Etiqueta,
+                    as: "etiquetas"
+                }
             ]
-        })
+        });
+
+        console.log(
+            publicaciones[0]?.toJSON()
+        );
+
         res.render('publicaciones', {
             publicaciones
         });
+
     } catch (error) {
         console.log(error);
-        res.status(500).send({ error: 'Error al obtener publicaciones' });
     }
-})
+
+});
 
 router.get('/:id', async (req, res) => {
 
@@ -33,15 +45,21 @@ router.get('/:id', async (req, res) => {
                         model: Imagen,
                         as: 'imagenes'
                     },
-                    Usuario
+                    Usuario,
+                    {
+                        model: Etiqueta,
+                        as: 'etiquetas'
+                    }
                 ]
             }
         );
 
+        console.log(
+            publicacion.toJSON()
+        );
         if (!publicacion) {
             return res.send("Publicación no encontrada");
         }
-
         res.render('publicacion', {
             publicacion
         });
