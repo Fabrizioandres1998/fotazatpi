@@ -1,0 +1,31 @@
+doctype html
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        title #{publicacion.titulo}
+    body
+        a(href="/publicaciones") ← Volver a todas las publicaciones
+
+        h1= publicacion.titulo
+        p= publicacion.descripcion
+
+        if publicacion.Usuario
+            p Autor: #{publicacion.Usuario.username}
+
+        if publicacion.etiquetas && publicacion.etiquetas.length
+            p Etiquetas: 
+                each etiq in publicacion.etiquetas
+                    a(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+                    |  
+
+        if publicacion.imagenes && publicacion.imagenes.length
+            h3 Imagenes
+            each imagen in publicacion.imagenes
+                img(src=imagen.url width="500")
+                br
+                if imagen.marca_agua
+                    p Marca de agua: #{imagen.marca_agua}
+                p Licencia: #{imagen.licencia}
+        else
+            p No hay imagenes para esta publicacion

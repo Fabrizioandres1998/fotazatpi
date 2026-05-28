@@ -3,22 +3,23 @@ html
     head
         title Publicaciones
     body
-
         h1 Publicaciones
 
         each publicacion in publicaciones
-
             hr
 
             h2= publicacion.titulo
-
             p= publicacion.descripcion
 
             if publicacion.Usuario
                 p Autor: #{publicacion.Usuario.username}
 
+            if publicacion.etiquetas && publicacion.etiquetas.length
+                p Etiquetas: 
+                    each etiqueta in publicacion.etiquetas
+                        span #{etiqueta.nombre} 
+                        |  
+
             each imagen in publicacion.imagenes
-                img(
-                    src=imagen.url
-                    width="300"
-                )
+                img(src=imagen.url width="300")
+                br

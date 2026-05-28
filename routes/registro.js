@@ -9,7 +9,6 @@ router.get('/', (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
     try {
-        console.log('Datos recibidos:', req.body);
 
         const { username, email, password_hash, confirmPassword } = req.body;
 
@@ -21,8 +20,6 @@ router.post('/', async (req, res, next) => {
         }
 
         const passwordHash = await bcrypt.hash(password_hash, 10);
-
-        console.log('Hash generado:', passwordHash);
 
         await Usuario.create({
             username,

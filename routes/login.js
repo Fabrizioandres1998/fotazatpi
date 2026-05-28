@@ -11,7 +11,6 @@ router.post('/', async (req, res) => {
 
   try {
     const { email, password_hash } = req.body;
-    console.log('Datos recibidos: ', req.body);
 
     const usuario = await Usuario.findOne({
       where: { email }
@@ -28,7 +27,6 @@ router.post('/', async (req, res) => {
     }
 
     req.session.id_usuario = usuario.id;
-    console.log(req.session);
     res.redirect('/perfil');
 
   } catch (error) {
