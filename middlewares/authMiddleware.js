@@ -1,7 +1,7 @@
 function authMiddleware(req, res, next) {
 
-    if (!req.session.usuarioId) {
-        return res.send("Acceso denegado");
+    if (!req.session.id_usuario) {
+        return res.redirect('/login');
     }
     next();
 }

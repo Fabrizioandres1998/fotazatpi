@@ -4,8 +4,12 @@ html(lang="en")
         meta(charset="UTF-8")
         meta(name="viewport" content="width=device-width, initial-scale=1.0")
         title Crear Publicación
+        style.
+            .hidden {
+                display: none;
+            }
     body 
-        form.row.g-3(method="POST" action="/publicacion/crear")
+        form.row.g-3(method="POST" action="/publicaciones/crear")
             .col-12
                 label.form-label(for="inputTitulo") Título
                 input.form-control(type="text" id="inputTitulo" name="titulo" placeholder="Título de la publicación", required)
@@ -25,8 +29,24 @@ html(lang="en")
                     option(value="copyright") Copyright (todos los derechos reservados)
                     option(value="sin_copyright") Sin copyright (dominio público / libre)
 
+            .col-12(id="campoMarcaAgua" style="display: none;")
+                label.form-label(for="inputMarcaAgua") Marca de agua
+                input.form-control(type="text" id="inputMarcaAgua" name="marca_agua" placeholder="Ej: © MiEmpresa 2024")
+
             .col-12
                 button.btn.btn-primary(type="submit") Publicar
 
             .col-12
                 a(href="/perfil") Volver a mi perfil
+
+    script.
+        const licenciaSelect = document.getElementById('inputLicencia');
+        const campoMarcaAgua = document.getElementById('campoMarcaAgua');
+
+        licenciaSelect.addEventListener('change', function() {
+            if (this.value === 'copyright') {
+                campoMarcaAgua.style.display = 'block';
+            } else {
+                campoMarcaAgua.style.display = 'none';
+            }
+        });

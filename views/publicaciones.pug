@@ -1,0 +1,24 @@
+doctype html
+html
+    head
+        title Publicaciones
+    body
+
+        h1 Publicaciones
+
+        each publicacion in publicaciones
+
+            hr
+
+            h2= publicacion.titulo
+
+            p= publicacion.descripcion
+
+            if publicacion.Usuario
+                p Autor: #{publicacion.Usuario.username}
+
+            each imagen in publicacion.imagenes
+                img(
+                    src=imagen.url
+                    width="300"
+                )

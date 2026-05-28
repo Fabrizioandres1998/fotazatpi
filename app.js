@@ -13,6 +13,11 @@ const logoutRouter = require('./routes/logout');
 const registroRouter = require('./routes/registro');
 const perfilRouter = require('./routes/perfil');
 const crearPublicacionRouter = require('./routes/crearPublicacion');
+const publicacionesRouter = require('./routes/publicaciones');
+
+//IMPORTACION MIDDLEWARES PROPIOS
+const authMiddleware = require('./middlewares/authMiddleware');
+const noAuthMiddleware = require('./middlewares/noAuthMiddleware');
 
 var app = express();
 
@@ -32,10 +37,10 @@ app.use(session({
 }));
 app.use(async (req, res, next) => {
 
-  if (req.session.usuarioId) {
+  if (req.session.id_usuario) {
 
     const usuario = await Usuario.findByPk(
-      req.session.usuarioId
+      req.session.id_usuario
     );
 
     res.locals.usuario = usuario;
@@ -45,11 +50,12 @@ app.use(async (req, res, next) => {
 });
 
 //USE DE LAS RUTAS
-app.use('/login', loginRouter);
+app.use('/login', noAuthMiddleware, loginRouter);
 app.use('/registro', registroRouter);
 app.use('/logout', logoutRouter);
-app.use('/perfil', perfilRouter);
-app.use('/publicacion', crearPublicacionRouter);
+app.use('/perfil', authMiddleware, perfilRouter);
+app.use('/publicaciones', authMiddleware, crearPublicacionRouter); //NO ES LA UNICA RUTA QUE VA A INCLUIR PUBLICACION
+app.use('/publicaciones', publicacionesRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

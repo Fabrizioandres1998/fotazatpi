@@ -6,11 +6,13 @@ router.get("/", (req, res) => {
 });
 
 router.post("/", (req, res) => {
-
-  req.session.destroy(() => {
-    res.send("Logout correcto");
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Error al destruir sesión:', err);
+      return res.send('Error al cerrar sesión');
+    }
+    res.redirect('/login');
   });
-
 });
 
 module.exports = router;

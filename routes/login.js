@@ -8,6 +8,7 @@ router.get('/', (req, res, next) => {
 });
 
 router.post('/', async (req, res) => {
+
   try {
     const { email, password_hash } = req.body;
     console.log('Datos recibidos: ', req.body);
@@ -26,13 +27,14 @@ router.post('/', async (req, res) => {
       return res.send('Contraseña incorrecta');
     }
 
-    req.session.usuarioId = usuario.id;
+    req.session.id_usuario = usuario.id;
     console.log(req.session);
-    res.send('Login correcto');
+    res.redirect('/perfil');
 
   } catch (error) {
     console.error(error);
     res.status(500).send('Error interno');
+    console.error(error.message)
   }
 });
 module.exports = router;

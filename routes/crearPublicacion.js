@@ -7,14 +7,14 @@ router.get('/crear', async (req, res, next) => {
 })
 router.post('/crear', async (req, res, next) => {
     try {
-        const { titulo, descripcion, url, licencia } = req.body;  
+        const { titulo, descripcion, url, licencia, marca_agua } = req.body;  
 
         console.log('Datos recibidos:', { titulo, descripcion, url, licencia });  
 
         const publicacion = await Publicacion.create({
             titulo: titulo,
             descripcion: descripcion,
-            id_usuario: req.session.usuarioId
+            id_usuario: req.session.id_usuario
         })
 
         if (url && licencia) {
@@ -28,7 +28,7 @@ router.post('/crear', async (req, res, next) => {
             console.log('No se creó imagen: faltan url o licencia');
         }
 
-        res.redirect('/perfil');
+        res.redirect(`/publicaciones/${publicacion.id}`);
 
     } catch (error) {
         console.error(error);
