@@ -10,45 +10,40 @@ router.get('/crear', async (req, res, next) => {
 // procesar la creacion de una nueva publicacion
 router.post('/crear', async (req, res, next) => {
     try {
-        // datos que vienen del formulario
-        const { titulo, descripcion, url, licencia, marca_agua, etiquetas } = req.body;
+        const { titulo, descripcion, url, url1, url2, licencia, marca_agua, etiquetas } = req.body;
 
-        // crear la publicacion con el usuario logueado
+        // crear la publicacion
         const publicacion = await Publicacion.create({
             titulo: titulo,
             descripcion: descripcion,
             id_usuario: req.session.id_usuario
         });
 
-        // si me mandaron etiquetas, las proceso una por una
+        // procesar etiquetas (igual)
         if (etiquetas && etiquetas.trim()) {
-            // separo por comas, limpio espacios, paso a minusculas, saco vacias
             const etiquetas_array = etiquetas
                 .split(',')
                 .map(e => e.trim().toLowerCase())
                 .filter(e => e !== '');
 
-            // recorro cada etiqueta
             for (const nombreEtiqueta of etiquetas_array) {
-                // busco si ya existe, si no la creo
                 const [etiqueta, creada] = await Etiqueta.findOrCreate({
                     where: { nombre: nombreEtiqueta }
                 });
-
-                // la asocio a la publicacion
                 await publicacion.addEtiqueta(etiqueta);
             }
         }
 
-        // si tengo url y licencia, creo la imagen
-        if (url && licencia) {
+        // crear imagenes (si tienen URL y licencia)
+        const urls = [url, url1, url2].filter(u => u && u.trim() !== '');
+
+        for (const imagenUrl of urls) {
             const imagenData = {
-                url: url,
+                url: imagenUrl,
                 licencia: licencia,
                 id_publicacion: publicacion.id
             };
 
-            // si tambien viene marca de agua, la agrego
             if (marca_agua) {
                 imagenData.marca_agua = marca_agua;
             }
@@ -56,7 +51,6 @@ router.post('/crear', async (req, res, next) => {
             await Imagen.create(imagenData);
         }
 
-        // todo ok, voy a ver la publicacion recien creada
         res.redirect(`/publicaciones/${publicacion.id}`);
 
     } catch (error) {

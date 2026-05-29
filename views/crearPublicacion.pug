@@ -1,84 +1,53 @@
-doctype html
-html(lang="en")
-    head
-        meta(charset="UTF-8")
-        meta(name="viewport" content="width=device-width, initial-scale=1.0")
-        title Crear Publicación
-        style.
-            .hidden {
-                display: none;
-            }
-            .form-group {
-                margin-bottom: 15px;
-            }
-            label {
-                display: block;
-                margin-bottom: 5px;
-                font-weight: bold;
-            }
-            input, textarea, select {
-                width: 100%;
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-            }
-            button {
-                background-color: #007bff;
-                color: white;
-                padding: 10px 20px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-            button:hover {
-                background-color: #0056b3;
-            }
-            .help-text {
-                font-size: 12px;
-                color: #666;
-                margin-top: 5px;
-            }
-    body 
-        form.row.g-3(method="POST" action="/publicaciones/crear")
-            .col-12
-                label.form-label(for="inputTitulo") Título
-                input.form-control(type="text" id="inputTitulo" name="titulo" placeholder="Título de la publicación", required)
+extends layout
 
-            .col-12
-                label.form-label(for="inputDescripcion") Descripción
-                textarea.form-control(id="inputDescripcion" name="descripcion" rows="5" placeholder="Escribe aquí el contenido de tu publicación...", required)
+block content
+    form.row.g-3(method="POST" action="/publicaciones/crear")
+        .col-12
+            label.form-label(for="inputTitulo") Título
+            input.form-control(type="text" id="inputTitulo" name="titulo" placeholder="Título de la publicación", required)
 
-            .col-12
-                label.form-label(for="inputUrl") URL de la imagen
-                input.form-control(type="url" id="inputUrl" name="url" placeholder="https://ejemplo.com/imagen.jpg")
+        .col-12
+            label.form-label(for="inputDescripcion") Descripción
+            textarea.form-control(id="inputDescripcion" name="descripcion" rows="5" placeholder="Escribe aquí el contenido de tu publicación...", required)
 
-            .col-12
-                label.form-label(for="inputLicencia") Tipo de licencia
-                select.form-control(id="inputLicencia" name="licencia" required)
-                    option(value="") Selecciona...
-                    option(value="copyright") Copyright (todos los derechos reservados)
-                    option(value="sin_copyright") Sin copyright (dominio público / libre)
+        .col-12
+            label.form-label(for="inputUrl") URL de la imagen 1
+            input.form-control(type="url" id="inputUrl" name="url" placeholder="https://ejemplo.com/imagen1.jpg")
 
-            .col-12(id="campoMarcaAgua" style="display: none;")
-                label.form-label(for="inputMarcaAgua") Marca de agua
-                input.form-control(type="text" id="inputMarcaAgua" name="marca_agua" placeholder="Ej: © MiEmpresa 2024")
+        .col-12
+            label.form-label(for="inputUrl1") URL de la imagen 2
+            input.form-control(type="url" id="inputUrl1" name="url1" placeholder="https://ejemplo.com/imagen2.jpg")
 
-            //- Campo de etiquetas
-            .col-12
-                label.form-label(for="inputEtiquetas") Etiquetas
-                input.form-control(
-                    type="text" 
-                    id="inputEtiquetas" 
-                    name="etiquetas" 
-                    placeholder="paisaje, noche, urbano, naturaleza..."
-                )
-                .help-text Separa las etiquetas con comas (ej: tecnologia, programacion, web)
+        .col-12
+            label.form-label(for="inputUrl2") URL de la imagen 3
+            input.form-control(type="url" id="inputUrl2" name="url2" placeholder="https://ejemplo.com/imagen3.jpg")
 
-            .col-12
-                button.btn.btn-primary(type="submit") Publicar
+        .col-12
+            label.form-label(for="inputLicencia") Tipo de licencia
+            select.form-control(id="inputLicencia" name="licencia" required)
+                option(value="") Selecciona...
+                option(value="copyright") Copyright (todos los derechos reservados)
+                option(value="sin_copyright") Sin copyright (dominio público / libre)
 
-            .col-12
-                a(href="/perfil") Volver a mi perfil
+        .col-12(id="campoMarcaAgua" style="display: none;")
+            label.form-label(for="inputMarcaAgua") Marca de agua
+            input.form-control(type="text" id="inputMarcaAgua" name="marca_agua" placeholder="Ej: © MiEmpresa 2024")
+
+        .col-12
+            label.form-label(for="inputEtiquetas") Etiquetas
+            input.form-control(
+                type="text" 
+                id="inputEtiquetas" 
+                name="etiquetas" 
+                placeholder="paisaje, noche, urbano, naturaleza..."
+            )
+            .help-text Separa las etiquetas con comas (ej: tecnologia, programacion, web)
+
+        .col-12
+            button.btn.btn-primary(type="submit") Publicar
+
+        .col-12
+            a(href="/perfil") Volver a mi perfil
 
     script.
         const licenciaSelect = document.getElementById('inputLicencia');

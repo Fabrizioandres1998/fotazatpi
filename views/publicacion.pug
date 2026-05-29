@@ -1,18 +1,49 @@
-doctype html
-html
-    head
-        title= publicacion.titulo
-    body
+extends layout
 
-        h1= publicacion.titulo
-
-        p= publicacion.descripcion
-
-        if publicacion.Usuario
-            p Autor: #{publicacion.Usuario.email}
-
-        each imagen in publicacion.imagenes
-            img(
-                src=imagen.url
-                width="400"
-            )
+block content
+    .container.mt-4
+        a.btn.btn-secondary.mb-3(href="/publicaciones") 
+        h1.mb-4= publicacion.titulo
+        
+        .row
+            .col-md-7
+                .card
+                    .card-body
+                        p.card-text= publicacion.descripcion
+                        
+                        if publicacion.Usuario
+                            p
+                                strong Autor: 
+                                | #{publicacion.Usuario.username}
+        
+                        if publicacion.etiquetas && publicacion.etiquetas.length
+                            p
+                                strong Etiquetas: 
+                                each etiq in publicacion.etiquetas
+                                    a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+            
+            .col-md-5
+                if publicacion.imagenes && publicacion.imagenes.length
+                    #carouselImagenes.carousel.slide(data-bs-ride="carousel")
+                        .carousel-indicators
+                            each img, idx in publicacion.imagenes
+                                button(type="button" data-bs-target="#carouselImagenes" data-bs-slide-to=idx class=idx === 0 ? "active" : "")
+                        
+                        .carousel-inner
+                            each img, idx in publicacion.imagenes
+                                .carousel-item(class=idx === 0 ? "active" : "")
+                                    .position-relative
+                                        img.d-block.w-100.rounded(src=img.url style="height: 300px; object-fit: cover;")
+                                        if img.licencia === 'copyright' && img.marca_agua
+                                            div(style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;") #{img.marca_agua}
+                        
+                        button.carousel-control-prev(type="button" data-bs-target="#carouselImagenes" data-bs-slide="prev")
+                            span.carousel-control-prev-icon
+                        button.carousel-control-next(type="button" data-bs-target="#carouselImagenes" data-bs-slide="next")
+                            span.carousel-control-next-icon
+                    
+                    if publicacion.imagenes[0]
+                        p.mt-2.text-muted Licencia: #{publicacion.imagenes[0].licencia}
+                else
+                    .alert.alert-info
+                        p No hay imagenes para esta publicacion

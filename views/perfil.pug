@@ -1,13 +1,48 @@
-doctype html
-html(lang="en")
-    head
-        meta(charset="UTF-8")
-        meta(name="viewport" content="width=device-width, initial-scale=1.0")
-        title Perfil
-    body 
-        if usuario
-            p= usuario.username
-            p= usuario.email
-            p= usuario.id
-    form(method="POST" name="logout" action="/logout")
-        button(type="submit") Logout        
+extends layout
+
+block content
+    .container.mt-4
+        h1.mb-4 Mis Publicaciones
+
+        if publicaciones && publicaciones.length
+            .row
+                each pub, index in publicaciones
+                    .col-md-6.col-lg-4.mb-4
+                        .card.h-100
+                            // Carrusel con id unico
+                            if pub.imagenes && pub.imagenes.length
+                                div(id=`carousel-${pub.id}`).carousel.slide
+                                    .carousel-inner
+                                        each img, imgIndex in pub.imagenes
+                                            .carousel-item(class=imgIndex === 0 ? "active" : "")
+                                                img.d-block.w-100(src=img.url style="height: 200px; object-fit: cover;")
+
+                                    // Botones solo si hay mas de una imagen
+                                    if pub.imagenes.length > 1
+                                        button.carousel-control-prev(type="button" data-bs-target=`#carousel-${pub.id}` data-bs-slide="prev")
+                                            span.carousel-control-prev-icon
+                                        button.carousel-control-next(type="button" data-bs-target=`#carousel-${pub.id}` data-bs-slide="next")
+                                            span.carousel-control-next-icon
+                            else
+                                .card-img-top.bg-secondary.d-flex.align-items-center.justify-content-center(style="height: 200px;")
+                                    span.text-white Sin imagen
+
+                            .card-body
+                                h5.card-title= pub.titulo
+                                p.card-text= pub.descripcion.substring(0, 100)
+
+                                if pub.etiquetas && pub.etiquetas.length
+                                    .mb-2
+                                        each etiq in pub.etiquetas
+                                            a.badge.bg-primary.me-1.text-decoration-none(href=`/perfil?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+
+                                a.btn.btn-warning.btn-sm(href=`/publicaciones/${pub.id}/editar`)
+                                    i.bi.bi-pencil-square
+                                    |  Editar
+
+                            .card-footer.text-muted
+                                small Creado: #{pub.createdAt.toLocaleDateString()}
+        else
+            .alert.alert-info
+                p.mb-0 No tenes publicaciones todavia.
+                a.btn.btn-primary.mt-3(href="/publicaciones/crear") Crear mi primera publicacion

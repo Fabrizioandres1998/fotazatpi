@@ -35,6 +35,10 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }));
+app.use((req, res, next) => {
+  res.locals.session = req.session;
+  next();
+});
 app.use(async (req, res, next) => {
 
   if (req.session.id_usuario) {
@@ -56,6 +60,7 @@ app.use('/logout', logoutRouter);
 app.use('/perfil', authMiddleware, perfilRouter);
 app.use('/publicaciones', authMiddleware, crearPublicacionRouter); //NO ES LA UNICA RUTA QUE VA A INCLUIR PUBLICACION
 app.use('/publicaciones', publicacionesRouter);
+app.use('/', publicacionesRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -1,10 +1,7 @@
 let express = require('express');
 let router = express.Router();
 
-router.get("/", (req, res) => {
-  res.render('logout');
-});
-
+// cerrar sesion (por post, desde un formulario)
 router.post("/", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -13,6 +10,11 @@ router.post("/", (req, res) => {
     }
     res.redirect('/login');
   });
+});
+
+// si alguien entra por get, lo mando al login
+router.get("/", (req, res) => {
+  res.redirect('/login');
 });
 
 module.exports = router;

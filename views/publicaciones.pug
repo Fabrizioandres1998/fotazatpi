@@ -1,25 +1,42 @@
-doctype html
-html
-    head
-        title Publicaciones
-    body
-        h1 Publicaciones
+extends layout
 
-        each publicacion in publicaciones
-            hr
-
-            h2= publicacion.titulo
-            p= publicacion.descripcion
-
-            if publicacion.Usuario
-                p Autor: #{publicacion.Usuario.username}
-
-            if publicacion.etiquetas && publicacion.etiquetas.length
-                p Etiquetas: 
-                    each etiqueta in publicacion.etiquetas
-                        span #{etiqueta.nombre} 
-                        |  
-
-            each imagen in publicacion.imagenes
-                img(src=imagen.url width="300")
-                br
+block content
+    .container.mt-4
+        h1.mb-4 Publicaciones
+        
+        if filtro
+            .alert.alert-info
+                | Publicaciones con la etiqueta: #{filtro}
+                a.ms-3(href="/publicaciones") Ver todas
+        
+        if publicaciones && publicaciones.length
+            .row
+                each pub in publicaciones
+                    .col-md-6.col-lg-4.mb-4
+                        .card.h-100.shadow-sm
+                            if pub.imagenes && pub.imagenes.length
+                                img.card-img-top(src=pub.imagenes[0].url style="height: 200px; object-fit: cover;")
+                            
+                            .card-body
+                                h5.card-title= pub.titulo
+                                p.card-text.text-muted= pub.descripcion.substring(0, 100)
+                                
+                                // etiquetas azules y clickeables
+                                if pub.etiquetas && pub.etiquetas.length
+                                    .mb-2
+                                        each etiq in pub.etiquetas
+                                            a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+                                
+                                if pub.Usuario
+                                    small.text-muted
+                                        i.bi.bi-person
+                                        |  #{pub.Usuario.username}
+                            
+                            .card-footer.bg-transparent
+                                a.btn.btn-sm.btn-outline-primary(href=`/publicaciones/${pub.id}`) Ver mas
+        else
+            .alert.alert-info
+                if filtro
+                    p No hay publicaciones con la etiqueta "#{filtro}"
+                else
+                    p No hay publicaciones disponibles

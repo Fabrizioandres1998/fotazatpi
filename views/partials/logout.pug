@@ -1,0 +1,12 @@
+.modal.fade(id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true")
+    .modal-dialog
+        .modal-content
+            .modal-header
+                h5.modal-title(id="logoutModalLabel") Confirmar cierre de sesión
+                button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+            .modal-body
+                h4 ¿Cerrar sesión?
+                p ¿Estás seguro de que quieres salir?
+                form(action="/logout" method="post")
+                    button(type="submit" class="btn btn-danger") Sí, cerrar sesión
+                    button(type="button" class="btn btn-secondary" data-bs-dismiss="modal") Cancelar

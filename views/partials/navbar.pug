@@ -1,0 +1,28 @@
+nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
+    .container
+        a.navbar-brand(href="/publicaciones") Mi App
+
+        button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav")
+            span.navbar-toggler-icon
+
+        .collapse.navbar-collapse(id="navbarNav")
+            ul.navbar-nav.me-auto
+                li.nav-item
+                    a.nav-link(href="/publicaciones") Inicio
+                li.nav-item
+                    a.nav-link(href="/perfil") Perfil
+                if session && session.id_usuario
+                    li.nav-item
+                        a.nav-link(href="/publicaciones/crear") Nueva Publicación
+
+            ul.navbar-nav
+                if session && session.id_usuario
+                    li.nav-item
+                        span.nav-link.text-light Hola, #{session.username || 'Usuario'}
+                    li.nav-item
+                        a.nav-link(href="#" data-bs-toggle="modal" data-bs-target="#logoutModal") Cerrar sesión
+                else
+                    li.nav-item
+                        a.nav-link(href="/login") Iniciar sesión
+                    li.nav-item
+                        a.nav-link(href="/registro") Registrarse

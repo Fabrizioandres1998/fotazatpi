@@ -1,0 +1,29 @@
+extends layout
+
+block content
+    .container.mt-4
+        h1 Editar Publicación
+
+        form(method="POST" action=`/publicaciones/${publicacion.id}/actualizar`)
+            div
+                label Título:
+                input(type="text" name="titulo" value=publicacion.titulo required)
+
+            div
+                label Descripción:
+                textarea(name="descripcion" rows="5")= publicacion.descripcion
+
+            div
+                label Etiquetas:
+                each etiqueta in todasEtiquetas
+                    label
+                        input(
+                            type="checkbox"
+                            name="etiquetas"
+                            value=etiqueta.id
+                            checked=(publicacion.etiquetas && publicacion.etiquetas.some(e => e.id === etiqueta.id))
+                        )
+                        | #{etiqueta.nombre}
+
+            button(type="submit") Guardar cambios
+            a(href=`/publicaciones/${publicacion.id}`) Cancelar
