@@ -55,10 +55,10 @@ app.use(async (req, res, next) => {
 
 //USE DE LAS RUTAS
 app.use('/login', noAuthMiddleware, loginRouter);
-app.use('/registro', registroRouter);
+app.use('/registro',noAuthMiddleware, registroRouter);
 app.use('/logout', logoutRouter);
 app.use('/perfil', authMiddleware, perfilRouter);
-app.use('/publicaciones', authMiddleware, crearPublicacionRouter); //NO ES LA UNICA RUTA QUE VA A INCLUIR PUBLICACION
+app.use('/publicaciones', authMiddleware, crearPublicacionRouter);
 app.use('/publicaciones', publicacionesRouter);
 app.use('/', publicacionesRouter);
 

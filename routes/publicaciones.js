@@ -28,6 +28,19 @@ router.get('/', async (req, res) => {
             }
         } else {
             // sin filtro, traigo todas
+            if (!req.session.id_usuario) {
+                publicaciones = await Publicacion.findAll({
+                    include: [
+                        { model: Usuario },
+                        { model: Imagen, as: "imagenes", where: { licencia: "sin_copyright" } }
+                    ]
+                })
+                // pasar publicaciones a la vista
+                return res.render('publicaciones', {
+                    publicaciones,
+                    filtro: null
+                });
+            }
             publicaciones = await Publicacion.findAll({
                 include: [
                     { model: Imagen, as: "imagenes" },
@@ -140,6 +153,32 @@ router.post('/:id/actualizar', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send("Error al actualizar");
+    }
+});
+
+// eliminar una publicacion
+router.post('/:id/eliminar', async (req, res) => {
+    try {
+        // busco la publicacion por id
+        const publicacion = await Publicacion.findByPk(req.params.id);
+
+        if (!publicacion) {
+            return res.status(404).send("Publicación no encontrada");
+        }
+
+        // verifico que sea el dueño
+        if (publicacion.id_usuario !== req.session.id_usuario) {
+            return res.status(403).send("No autorizado");
+        }
+
+        // elimino la publicacion (las imagenes se eliminan solas si tenes CASCADE)
+        await publicacion.destroy();
+
+        res.redirect('/perfil');
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error al eliminar la publicacion");
     }
 });
 

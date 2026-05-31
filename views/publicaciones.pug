@@ -3,12 +3,12 @@ extends layout
 block content
     .container.mt-4
         h1.mb-4 Publicaciones
-        
+
         if filtro
             .alert.alert-info
                 | Publicaciones con la etiqueta: #{filtro}
                 a.ms-3(href="/publicaciones") Ver todas
-        
+
         if publicaciones && publicaciones.length
             .row
                 each pub in publicaciones
@@ -16,22 +16,23 @@ block content
                         .card.h-100.shadow-sm
                             if pub.imagenes && pub.imagenes.length
                                 img.card-img-top(src=pub.imagenes[0].url style="height: 200px; object-fit: cover;")
-                            
+
                             .card-body
                                 h5.card-title= pub.titulo
                                 p.card-text.text-muted= pub.descripcion.substring(0, 100)
-                                
+
                                 // etiquetas azules y clickeables
                                 if pub.etiquetas && pub.etiquetas.length
                                     .mb-2
                                         each etiq in pub.etiquetas
                                             a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
-                                
+
                                 if pub.Usuario
                                     small.text-muted
-                                        i.bi.bi-person
-                                        |  #{pub.Usuario.username}
-                            
+                                        a(href=`/perfil/${pub.Usuario.username}`)
+                                            i.bi.bi-person
+                                            |  #{pub.Usuario.username}
+
                             .card-footer.bg-transparent
                                 a.btn.btn-sm.btn-outline-primary(href=`/publicaciones/${pub.id}`) Ver mas
         else

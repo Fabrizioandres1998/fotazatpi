@@ -2,7 +2,17 @@ extends layout
 
 block content
     .container.mt-4
-        h1.mb-4 Mis Publicaciones
+        - const tituloPerfil = esMiPerfil ? "Mis Publicaciones" : `Publicaciones de ${usuario.username}`
+        h1.mb-4= tituloPerfil
+
+        if filtro
+            .alert.alert-info
+                if esMiPerfil
+                    | Mostrando tus publicaciones con etiqueta: #{filtro}
+                    a.ms-3(href="/perfil") Ver todas
+                else
+                    | Mostrando publicaciones de #{usuario.username} con etiqueta: #{filtro}
+                    a.ms-3(href=`/perfil/${usuario.username}`) Ver todas
 
         if publicaciones && publicaciones.length
             .row
@@ -34,15 +44,36 @@ block content
                                 if pub.etiquetas && pub.etiquetas.length
                                     .mb-2
                                         each etiq in pub.etiquetas
-                                            a.badge.bg-primary.me-1.text-decoration-none(href=`/perfil?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+                                            if esMiPerfil
+                                                a.badge.bg-primary.me-1.text-decoration-none(href=`/perfil?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+                                            else
+                                                a.badge.bg-primary.me-1.text-decoration-none(href=`/perfil/${usuario.username}?etiqueta=${etiq.nombre}`) #{etiq.nombre}
 
-                                a.btn.btn-warning.btn-sm(href=`/publicaciones/${pub.id}/editar`)
-                                    i.bi.bi-pencil-square
-                                    |  Editar
+                                // Botones de acción SOLO para mi propio perfil
+                                if esMiPerfil
+                                    .mt-2
+                                        a.btn.btn-warning.btn-sm.me-2(href=`/publicaciones/${pub.id}/editar`)
+                                            i.bi.bi-pencil-square
+                                            |  Editar
+
+                                        // Boton eliminar
+                                        form.d-inline(method="POST" action=`/publicaciones/${pub.id}/eliminar` onsubmit="return confirm('¿Eliminar esta publicacion?')")
+                                            button.btn.btn-danger.btn-sm(type="submit")
+                                                i.bi.bi-trash
+                                                |  Eliminar
+
+                                // Boton "Ver más" para todos los perfiles
+                                .mt-2
+                                    a.btn.btn-outline-primary.btn-sm(href=`/publicaciones/${pub.id}`)
+                                        i.bi.bi-eye
+                                        |  Ver más
 
                             .card-footer.text-muted
                                 small Creado: #{pub.createdAt.toLocaleDateString()}
         else
             .alert.alert-info
-                p.mb-0 No tenes publicaciones todavia.
-                a.btn.btn-primary.mt-3(href="/publicaciones/crear") Crear mi primera publicacion
+                if esMiPerfil
+                    p.mb-0 No tenes publicaciones todavia.
+                    a.btn.btn-primary.mt-3(href="/publicaciones/crear") Crear mi primera publicacion
+                else
+                    p.mb-0 #{usuario.username} no tiene publicaciones todavia.
