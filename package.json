@@ -3,9 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-  "build": "npm install",
-  "start": "node app.js",
-  "migrate": "sequelize-cli db:migrate --env production"
+    "start": "node ./bin/www",
+    "migrate": "npx sequelize-cli db:migrate --env production"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
