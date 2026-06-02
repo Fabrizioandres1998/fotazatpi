@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
 var SequelizeStore = require('connect-session-sequelize')(session.Store);
+const flash = require('connect-flash');
 
 // IMPORTACION DE MODELOS Y SEQUELIZE
 const { Usuario, sequelize } = require('./models');
@@ -34,18 +35,21 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// SESSION CON SEQUELIZE
+// SESSION CON SEQUELIZE (PRIMERO LA SESIÓN)
 app.use(session({
   secret: process.env.SESSION_SECRET || 'miSecretoPorDefecto',
   resave: false,
   saveUninitialized: false,
   store: new SequelizeStore({
     db: sequelize,
-    checkExpirationInterval: 15 * 60 * 1000, // Cada 15 min limpia sesiones vencidas
-    expiration: 24 * 60 * 60 * 1000, // Las sesiones duran 24 horas
+    checkExpirationInterval: 15 * 60 * 1000,
+    expiration: 24 * 60 * 60 * 1000,
     tableName: 'Sessions'
   })
 }));
+
+// FLASH DESPUÉS DE LA SESIÓN
+app.use(flash());
 
 // MIDDLEWARE PARA PASAR SESSION A LAS VISTAS
 app.use((req, res, next) => {
@@ -66,6 +70,14 @@ app.use(async (req, res, next) => {
   next();
 });
 
+// MIDDLEWARE PARA MENSAJES FLASH (DESPUÉS DE FLASH)
+app.use((req, res, next) => {
+  res.locals.success_msg = req.flash('success');
+  res.locals.error_msg = req.flash('error');
+  res.locals.user = req.session.id_usuario || null;
+  next();
+});
+
 // USE DE LAS RUTAS
 app.use('/login', noAuthMiddleware, loginRouter);
 app.use('/registro', noAuthMiddleware, registroRouter);
@@ -82,11 +94,8 @@ app.use(function (req, res, next) {
 
 // error handler
 app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
   res.status(err.status || 500);
   res.render('error');
 });

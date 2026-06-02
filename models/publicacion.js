@@ -6,19 +6,15 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Publicacion extends Model {
     static associate(models) {
-      Publicacion.belongsTo(models.Usuario, {
-        foreignKey: "id_usuario"
-      });
-      Publicacion.hasMany(models.Imagen, {
-        foreignKey: "id_publicacion",
-        as: "imagenes"
-      });
+      Publicacion.belongsTo(models.Usuario, { foreignKey: "id_usuario" });
+      Publicacion.hasMany(models.Imagen, { foreignKey: "id_publicacion", as: "imagenes" });
       Publicacion.belongsToMany(models.Etiqueta, {
         through: 'publicacion_etiqueta',
         foreignKey: 'id_publicacion',
         otherKey: 'id_etiqueta',
         as: 'etiquetas'
       });
+      Publicacion.hasMany(models.comentario, { foreignKey: 'id_publicacion' }); // ← AGREGAR ESTA
     }
   }
 

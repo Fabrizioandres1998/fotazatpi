@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Publicacion, Imagen, Usuario, Etiqueta } = require('../models');
+const { Publicacion, Imagen, Usuario, Etiqueta, comentario } = require('../models');
 
 // listar todas o filtrar por etiqueta
 router.get('/', async (req, res) => {
@@ -9,17 +9,15 @@ router.get('/', async (req, res) => {
 
     try {
         if (etiqueta) {
-            // busco la etiqueta por nombre
             const etiquetaEncontrada = await Etiqueta.findOne({
                 where: { nombre: etiqueta.toLowerCase() }
             })
 
             if (etiquetaEncontrada) {
-                // traigo solo las publicaciones que tienen esta etiqueta
                 publicaciones = await etiquetaEncontrada.getPublicaciones({
                     include: [
                         { model: Imagen, as: 'imagenes' },
-                        Usuario,
+                        { model: Usuario },
                         { model: Etiqueta, as: 'etiquetas' }
                     ]
                 });
@@ -27,7 +25,6 @@ router.get('/', async (req, res) => {
                 publicaciones = [];
             }
         } else {
-            // sin filtro, traigo todas
             if (!req.session.id_usuario) {
                 publicaciones = await Publicacion.findAll({
                     include: [
@@ -35,7 +32,6 @@ router.get('/', async (req, res) => {
                         { model: Imagen, as: "imagenes", where: { licencia: "sin_copyright" } }
                     ]
                 })
-                // pasar publicaciones a la vista
                 return res.render('publicaciones', {
                     publicaciones,
                     filtro: null
@@ -44,7 +40,7 @@ router.get('/', async (req, res) => {
             publicaciones = await Publicacion.findAll({
                 include: [
                     { model: Imagen, as: "imagenes" },
-                    Usuario,
+                    { model: Usuario },
                     { model: Etiqueta, as: "etiquetas" }
                 ]
             });
@@ -64,28 +60,66 @@ router.get('/', async (req, res) => {
 // ver una publicacion individual
 router.get('/:id', async (req, res) => {
     try {
-        const publicacion = await Publicacion.findByPk(
-            req.params.id,
-            {
-                include: [
-                    { model: Imagen, as: 'imagenes' },
-                    Usuario,
-                    { model: Etiqueta, as: 'etiquetas' }
-                ]
-            }
-        );
+        const publicacion = await Publicacion.findByPk(req.params.id, {
+            include: [
+                { model: Imagen, as: 'imagenes' },
+                { model: Usuario },
+                { model: Etiqueta, as: 'etiquetas' }
+            ]
+        });
 
         if (!publicacion) {
-            return res.send("Publicación no encontrada");
+            return res.status(404).send("Publicación no encontrada");
         }
-        res.render('publicacion', { publicacion });
 
+        // Traer comentarios con los datos del usuario
+        const comentarios = await comentario.findAll({
+            where: { id_publicacion: req.params.id },
+            include: [{ model: Usuario }],  // ← AGREGAR ESTO
+            order: [['createdAt', 'ASC']]
+        });
+
+        res.render('publicacion', { publicacion, comentarios });
     } catch (error) {
         console.error(error);
-        res.status(500).send("Error");
+        res.status(500).send("Error al cargar la publicación");
     }
 });
 
+// post comentario - CORREGIDO
+router.post('/:id/comentario', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { texto } = req.body;
+        const id_usuario = req.session.id_usuario;
+
+        if (!id_usuario) {
+            req.flash('error', 'Debes iniciar sesión para comentar');
+            return res.redirect(`/publicaciones/${id}`);
+        }
+
+        if (!texto || texto.trim() === '') {
+            req.flash('error', 'El comentario no puede estar vacío');
+            return res.redirect(`/publicaciones/${id}`);
+        }
+
+        await comentario.create({
+            texto: texto.trim(),
+            id_usuario: id_usuario,
+            id_publicacion: id
+        });
+
+        req.flash('success', 'Comentario agregado correctamente');
+        res.redirect(`/publicaciones/${id}`);
+
+    } catch (error) {
+        console.error('Error al crear comentario:', error);
+        req.flash('error', 'Error al crear comentario');
+        res.redirect(`/publicaciones/${req.params.id}`);
+    }
+});
+
+// el resto de las rutas (editar, actualizar, eliminar) quedan igual
 // mostrar formulario de edicion
 router.get('/:id/editar', async (req, res) => {
     try {
@@ -101,7 +135,6 @@ router.get('/:id/editar', async (req, res) => {
             return res.status(404).send("Publicación no encontrada");
         }
 
-        // verifico que sea el dueño
         if (publicacion.id_usuario !== req.session.id_usuario) {
             return res.status(403).send("No autorizado");
         }
@@ -128,23 +161,18 @@ router.post('/:id/actualizar', async (req, res) => {
             return res.status(404).send("Publicación no encontrada");
         }
 
-        // actualizo titulo y descripcion
         await publicacion.update({
             titulo: req.body.titulo,
             descripcion: req.body.descripcion
         });
 
-        // actualizo las etiquetas
         if (req.body.etiquetas) {
             let etiquetasIds = req.body.etiquetas;
-
             if (!Array.isArray(etiquetasIds)) {
                 etiquetasIds = [etiquetasIds];
             }
-
             await publicacion.setEtiquetas(etiquetasIds);
         } else {
-            // si no mandaron nada, limpio todo
             await publicacion.setEtiquetas([]);
         }
 
@@ -159,21 +187,17 @@ router.post('/:id/actualizar', async (req, res) => {
 // eliminar una publicacion
 router.post('/:id/eliminar', async (req, res) => {
     try {
-        // busco la publicacion por id
         const publicacion = await Publicacion.findByPk(req.params.id);
 
         if (!publicacion) {
             return res.status(404).send("Publicación no encontrada");
         }
 
-        // verifico que sea el dueño
         if (publicacion.id_usuario !== req.session.id_usuario) {
             return res.status(403).send("No autorizado");
         }
 
-        // elimino la publicacion (las imagenes se eliminan solas si tenes CASCADE)
         await publicacion.destroy();
-
         res.redirect('/perfil');
 
     } catch (error) {

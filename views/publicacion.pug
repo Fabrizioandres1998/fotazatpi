@@ -2,48 +2,88 @@ extends layout
 
 block content
     .container.mt-4
+
         a.btn.btn-secondary.mb-3(href="/publicaciones") Volver
-        h1.mb-4= publicacion.titulo
 
-        .row
-            .col-md-7
-                .card
-                    .card-body
-                        p.card-text= publicacion.descripcion
+        if publicacion
+            // DATOS DE LA PUBLICACIÓN
+            h1.mb-4= publicacion.titulo
 
-            if publicacion.Usuario
-                p
-                    strong Autor: 
-                    | #{publicacion.Usuario.username}
+            .row
+                .col-md-7
+                    .card
+                        .card-body
+                            p.card-text= publicacion.descripcion
 
-            if publicacion.etiquetas && publicacion.etiquetas.length
-                p
-                    strong Etiquetas: 
-                    each etiq in publicacion.etiquetas
-                        a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+                    if publicacion.Usuario
+                        p.mt-2
+                            strong Autor: 
+                            a(href=`/perfil/${publicacion.Usuario.username}`) #{publicacion.Usuario.username}
 
-            .col-md-5
-                if publicacion.imagenes && publicacion.imagenes.length
-                    #carouselImagenes.carousel.slide(data-bs-ride="carousel")
-                        .carousel-indicators
-                            each img, idx in publicacion.imagenes
-                                button(type="button" data-bs-target="#carouselImagenes" data-bs-slide-to=idx class=idx === 0 ? "active" : "")
+                    if publicacion.etiquetas && publicacion.etiquetas.length
+                        p
+                            strong Etiquetas: 
+                            each etiq in publicacion.etiquetas
+                                a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
 
-                        .carousel-inner
-                            each img, idx in publicacion.imagenes
-                                .carousel-item(class=idx === 0 ? "active" : "")
-                                    .position-relative
-                                        img.d-block.w-100.rounded(src=img.url style="height: 300px; object-fit: cover;")
-                                        if img.licencia === 'copyright' && img.marca_agua
-                                            div(style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;") #{img.marca_agua}
+                .col-md-5
+                    if publicacion.imagenes && publicacion.imagenes.length
+                        #carouselImagenes.carousel.slide(data-bs-ride="carousel")
+                            .carousel-indicators
+                                each img, idx in publicacion.imagenes
+                                    button(type="button" data-bs-target="#carouselImagenes" data-bs-slide-to=idx class=idx === 0 ? "active" : "")
 
-                        button.carousel-control-prev(type="button" data-bs-target="#carouselImagenes" data-bs-slide="prev")
-                            span.carousel-control-prev-icon
-                        button.carousel-control-next(type="button" data-bs-target="#carouselImagenes" data-bs-slide="next")
-                            span.carousel-control-next-icon
+                            .carousel-inner
+                                each img, idx in publicacion.imagenes
+                                    .carousel-item(class=idx === 0 ? "active" : "")
+                                        .position-relative
+                                            img.d-block.w-100.rounded(src=img.url style="height: 300px; object-fit: cover;")
+                                            if img.licencia === 'copyright' && img.marca_agua
+                                                div(style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;") #{img.marca_agua}
 
-                    if publicacion.imagenes[0]
-                        p.mt-2.text-muted Licencia: #{publicacion.imagenes[0].licencia}
-                else
-                    .alert.alert-info
-                        p No hay imagenes para esta publicacion
+                            button.carousel-control-prev(type="button" data-bs-target="#carouselImagenes" data-bs-slide="prev")
+                                span.carousel-control-prev-icon
+                            button.carousel-control-next(type="button" data-bs-target="#carouselImagenes" data-bs-slide="next")
+                                span.carousel-control-next-icon
+
+                        if publicacion.imagenes[0]
+                            p.mt-2.text-muted Licencia: #{publicacion.imagenes[0].licencia}
+                    else
+                        .alert.alert-info
+                            p No hay imagenes para esta publicacion
+
+            // SECCIÓN DE COMENTARIOS
+            .row.mt-5
+                .col-12
+                    hr
+                    h3 Comentarios
+
+                    if comentarios && comentarios.length > 0
+                        each comentario in comentarios
+                            .card.mb-2
+                                .card-body
+                                    a(href=`/perfil/${comentario.Usuario.username}`) 
+                                        strong #{comentario.Usuario ? comentario.Usuario.username : 'Usuario desconocido'}
+                                    p.card-text.mt-2= comentario.texto
+                                    small.text-muted= comentario.createdAt
+                    else
+                        .alert.alert-secondary
+                            p.mb-0 No hay comentarios aún. ¡Sé el primero en comentar!
+
+                    if session && session.id_usuario
+                        .card.mt-3
+                            .card-header
+                                strong Agregar comentario
+                            .card-body
+                                form(action=`/publicaciones/${publicacion.id}/comentario`, method="POST")
+                                    .mb-3
+                                        textarea.form-control(name="texto" rows="3" placeholder="Escribe tu comentario...", required)
+                                    button.btn.btn-primary(type="submit") Comentar
+                    else
+                        .alert.alert-info.mt-3
+                            p.mb-0 
+                                a(href="/login") Inicia sesión
+                                |  para comentar
+        else
+            .alert.alert-danger
+                p Publicación no encontrada

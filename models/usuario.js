@@ -5,11 +5,11 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Usuario extends Model {
     static associate(models) {
-      Usuario.hasMany(models.Publicacion, {
-        foreignKey: "id_usuario"
-      })
+      Usuario.hasMany(models.Publicacion, { foreignKey: "id_usuario" });
+      Usuario.hasMany(models.comentario, { foreignKey: 'id_usuario' }); // ← AGREGAR ESTA
     }
   }
+
   Usuario.init({
     username: DataTypes.STRING,
     email: DataTypes.STRING,
@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Usuario',
-    tableName: 'usuario' 
+    tableName: 'usuario'
   });
   return Usuario;
 };
