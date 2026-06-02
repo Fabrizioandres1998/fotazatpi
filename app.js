@@ -52,9 +52,7 @@ app.use((req, res, next) => {
   res.locals.session = req.session;
   next();
 });
-app.get('/', (req, res) => {
-  res.send('API funcionando correctamente');
-});
+
 // MIDDLEWARE PARA CARGAR USUARIO EN LAS VISTAS
 app.use(async (req, res, next) => {
   if (req.session.id_usuario) {
