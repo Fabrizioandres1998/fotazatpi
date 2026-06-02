@@ -30,11 +30,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+const session = require('express-session');
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
+const { sequelize } = require('./models'); 
+
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  store: new SequelizeStore({
+    db: sequelize,
+    checkExpirationInterval: 15 * 60 * 1000, // Cada 15 min limpia sesiones vencidas
+    expiration: 24 * 60 * 60 * 1000, // Las sesiones duran 24 horas
+    tableName: 'Sessions'
+  })
 }));
+sequelize.sync();
+
 app.use((req, res, next) => {
   res.locals.session = req.session;
   next();
@@ -55,7 +67,7 @@ app.use(async (req, res, next) => {
 
 //USE DE LAS RUTAS
 app.use('/login', noAuthMiddleware, loginRouter);
-app.use('/registro',noAuthMiddleware, registroRouter);
+app.use('/registro', noAuthMiddleware, registroRouter);
 app.use('/logout', logoutRouter);
 app.use('/perfil', authMiddleware, perfilRouter);
 app.use('/publicaciones', authMiddleware, crearPublicacionRouter);
