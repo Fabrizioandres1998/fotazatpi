@@ -34,7 +34,7 @@ router.post('/crear', async (req, res, next) => {
             }
         }
 
-        // crear imagenes (si tienen URL y licencia)
+        // crear imagenes (si tienen url y licencia)
         const urls = [url, url1, url2].filter(u => u && u.trim() !== '');
 
         for (const imagenUrl of urls) {

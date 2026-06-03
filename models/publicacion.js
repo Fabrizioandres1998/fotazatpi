@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'id_etiqueta',
         as: 'etiquetas'
       });
-      Publicacion.hasMany(models.comentario, { foreignKey: 'id_publicacion' }); // ← AGREGAR ESTA
+      Publicacion.hasMany(models.comentario, { foreignKey: 'id_publicacion' }); 
     }
   }
 

@@ -1,31 +1,30 @@
 const express = require('express')
 const router = express.Router()
-const { Publicacion, Imagen, Usuario, Etiqueta } = require('../models');
+const { Publicacion, Imagen, Usuario, Etiqueta, follower } = require('../models');
 
-// routes/perfil.js
-// Muestra mi propio perfil (usando la sesión)
+// Muestra mi perfil (usando la sesion)
 router.get('/', async (req, res, next) => {
     try {
         const { etiqueta } = req.query;
         let publicaciones;
 
-        // Obtener el usuario actual desde la sesión
-        const usuario = await Usuario.findByPk(req.session.id_usuario);
+        const usuario = await Usuario.findByPk(req.session.id_usuario, {
+            include: [
+                { model: Usuario, as: 'seguidores', attributes: ['id', 'username'] },
+                { model: Usuario, as: 'seguidos', attributes: ['id', 'username'] }
+            ]
+        });
 
-        // Si no hay usuario logueado, redirigir al login
         if (!usuario) {
             return res.redirect('/login');
         }
 
-        // Si hay filtro por etiqueta
         if (etiqueta) {
-            // busco la etiqueta por nombre
             const etiquetaEncontrada = await Etiqueta.findOne({
                 where: { nombre: etiqueta.toLowerCase() }
             });
 
             if (etiquetaEncontrada) {
-                // traigo mis publicaciones que tienen esta etiqueta
                 publicaciones = await etiquetaEncontrada.getPublicaciones({
                     where: { id_usuario: req.session.id_usuario },
                     include: [
@@ -38,7 +37,6 @@ router.get('/', async (req, res, next) => {
                 publicaciones = [];
             }
         } else {
-            // sin filtro, traigo todas mis publicaciones
             publicaciones = await Publicacion.findAll({
                 where: { id_usuario: req.session.id_usuario },
                 include: [
@@ -49,48 +47,50 @@ router.get('/', async (req, res, next) => {
             });
         }
 
-        // renderizar la vista pasando los datos
-        // esMiPerfil = true porque es mi propio perfil
         res.render('perfil', {
-            usuario: usuario,
+            perfil: usuario,
             publicaciones: publicaciones,
             filtro: etiqueta || null,
-            esMiPerfil: true
+            esMiPerfil: true,
+            seguidoresCount: usuario.seguidores ? usuario.seguidores.length : 0,
+            seguidosCount: usuario.seguidos ? usuario.seguidos.length : 0,
+            siguiendo: false,
+            seguidoresLista: usuario.seguidores || [],
+            seguidosLista: usuario.seguidos || []
         });
 
     } catch (error) {
         console.error(error);
-        res.status(500).send("Error al cargar el perfil");
+        res.status(500).send("Error al cargar el perfil: " + error.message);
     }
-})
+});
 
-// Muestra el perfil de otro usuario por nombre de usuario
+// muestra el perfil de otro usuario por nombre de usuario
 router.get('/:username', async (req, res) => {
     try {
         const { username } = req.params;
         const { etiqueta } = req.query;
 
-        // Buscar el usuario por nombre de usuario
         const usuario = await Usuario.findOne({
-            where: { username: username }
+            where: { username: username },
+            include: [
+                { model: Usuario, as: 'seguidores', attributes: ['id', 'username'] },
+                { model: Usuario, as: 'seguidos', attributes: ['id', 'username'] }
+            ]
         });
 
-        // Si no existe el usuario, error 404
         if (!usuario) {
             return res.status(404).send("Usuario no encontrado");
         }
 
         let publicaciones;
 
-        // Si hay filtro por etiqueta
         if (etiqueta) {
-            // busco la etiqueta por nombre
             const etiquetaEncontrada = await Etiqueta.findOne({
                 where: { nombre: etiqueta.toLowerCase() }
             });
 
             if (etiquetaEncontrada) {
-                // traigo las publicaciones de ese usuario que tienen esta etiqueta
                 publicaciones = await etiquetaEncontrada.getPublicaciones({
                     where: { id_usuario: usuario.id },
                     include: [
@@ -103,7 +103,6 @@ router.get('/:username', async (req, res) => {
                 publicaciones = [];
             }
         } else {
-            // sin filtro, traigo todas las publicaciones de ese usuario
             publicaciones = await Publicacion.findAll({
                 where: { id_usuario: usuario.id },
                 include: [
@@ -114,20 +113,37 @@ router.get('/:username', async (req, res) => {
             });
         }
 
-        // deyerminar si es mi propio perfil 
         const esMiPerfil = req.session.id_usuario === usuario.id;
 
-        // renderizar la vista pasando los datos
+        let siguiendo = false;
+        if (req.session.id_usuario && !esMiPerfil) {
+            const relacion = await follower.findOne({
+                where: {
+                    id_seguidor: req.session.id_usuario,
+                    id_seguido: usuario.id
+                }
+            });
+            siguiendo = !!relacion;
+        }
+
         res.render('perfil', {
-            usuario: usuario,
+            perfil: usuario,
             publicaciones: publicaciones,
             filtro: etiqueta || null,
-            esMiPerfil: esMiPerfil
+            esMiPerfil: esMiPerfil,
+            seguidoresCount: usuario.seguidores ? usuario.seguidores.length : 0,
+            seguidosCount: usuario.seguidos ? usuario.seguidos.length : 0,
+            siguiendo: siguiendo,
+            seguidoresLista: usuario.seguidores || [],
+            seguidosLista: usuario.seguidos || []
         });
 
     } catch (error) {
+        console.error('ERROR PERFIL:');
         console.error(error);
-        res.status(500).send("Error al cargar el perfil");
+        console.error(error.stack);
+
+        res.status(500).send("Error al cargar el perfil: " + error.message);
     }
 });
 

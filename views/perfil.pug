@@ -1,79 +1,151 @@
 extends layout
 
 block content
-    .container.mt-4
-        - const tituloPerfil = esMiPerfil ? "Mis Publicaciones" : `Publicaciones de ${usuario.username}`
-        h1.mb-4= tituloPerfil
+    .row
+        .col-md-4
+            .card
+                .card-body.text-center
+                    h3= perfil ? perfil.username : (usuario ? usuario.username : 'Usuario')
 
-        if filtro
-            .alert.alert-info
-                if esMiPerfil
-                    | Mostrando tus publicaciones con etiqueta: #{filtro}
-                    a.ms-3(href="/perfil") Ver todas
-                else
-                    | Mostrando publicaciones de #{usuario.username} con etiqueta: #{filtro}
-                    a.ms-3(href=`/perfil/${usuario.username}`) Ver todas
+                    .row.mt-3
+                        .col-4
+                            strong #{publicaciones ? publicaciones.length : 0}
+                            br
+                            small Publicaciones
+                        .col-4
+                            a(href="#" data-bs-toggle="modal" data-bs-target="#seguidoresModal" style="text-decoration: none; cursor: pointer;")
+                                strong #{seguidoresCount || 0}
+                                br
+                                small Seguidores
+                        .col-4
+                            a(href="#" data-bs-toggle="modal" data-bs-target="#seguidosModal" style="text-decoration: none; cursor: pointer;")
+                                strong #{seguidosCount || 0}
+                                br
+                                small Seguidos
 
-        if publicaciones && publicaciones.length
-            .row
-                each pub, index in publicaciones
-                    .col-md-6.col-lg-4.mb-4
-                        .card.h-100
-                            // Carrusel con id unico
-                            if pub.imagenes && pub.imagenes.length
-                                div(id=`carousel-${pub.id}`).carousel.slide
-                                    .carousel-inner
-                                        each img, imgIndex in pub.imagenes
-                                            .carousel-item(class=imgIndex === 0 ? "active" : "")
-                                                img.d-block.w-100(src=img.url style="height: 200px; object-fit: cover;")
+                    if !esMiPerfil && session && session.id_usuario
+                        if siguiendo
+                            form(action=`/follower/dejar-seguir/${perfil ? perfil.id : usuario.id}`, method="POST" class="mt-3")
+                                button.btn.btn-danger(type="submit") Dejar de seguir
+                        else
+                            form(action=`/follower/seguir/${perfil ? perfil.id : usuario.id}`, method="POST" class="mt-3")
+                                button.btn.btn-primary(type="submit") Seguir
 
-                                    // Botones solo si hay mas de una imagen
-                                    if pub.imagenes.length > 1
-                                        button.carousel-control-prev(type="button" data-bs-target=`#carousel-${pub.id}` data-bs-slide="prev")
-                                            span.carousel-control-prev-icon
-                                        button.carousel-control-next(type="button" data-bs-target=`#carousel-${pub.id}` data-bs-slide="next")
-                                            span.carousel-control-next-icon
-                            else
-                                .card-img-top.bg-secondary.d-flex.align-items-center.justify-content-center(style="height: 200px;")
-                                    span.text-white Sin imagen
+                    if esMiPerfil
+                        a.btn.btn-outline-secondary.mt-3(href="/perfil/editar") Editar perfil
 
-                            .card-body
-                                h5.card-title= pub.titulo
-                                p.card-text= pub.descripcion.substring(0, 100)
+        .col-md-8
+            - const tituloPerfil = esMiPerfil ? "Mis Publicaciones" : `Publicaciones de ${perfil ? perfil.username : usuario.username}`
+            h1.mb-4= tituloPerfil
 
-                                if pub.etiquetas && pub.etiquetas.length
-                                    .mb-2
-                                        each etiq in pub.etiquetas
-                                            if esMiPerfil
-                                                a.badge.bg-primary.me-1.text-decoration-none(href=`/perfil?etiqueta=${etiq.nombre}`) #{etiq.nombre}
-                                            else
-                                                a.badge.bg-primary.me-1.text-decoration-none(href=`/perfil/${usuario.username}?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+            if filtro
+                .alert.alert-info
+                    if esMiPerfil
+                        | Mostrando tus publicaciones con etiqueta: #{filtro}
+                        a.ms-3(href="/perfil") Ver todas
+                    else
+                        | Mostrando publicaciones de #{perfil ? perfil.username : usuario.username} con etiqueta: #{filtro}
+                        a.ms-3(href=`/perfil/${perfil ? perfil.username : usuario.username}`) Ver todas
 
-                                // Botones de acción SOLO para mi propio perfil
-                                if esMiPerfil
+            if publicaciones && publicaciones.length
+                .row
+                    each pub, index in publicaciones
+                        .col-md-6.col-lg-4.mb-4
+                            .card.h-100
+                                if pub.imagenes && pub.imagenes.length
+                                    div(id=`carousel-${pub.id}`).carousel.slide
+                                        .carousel-inner
+                                            each img, imgIndex in pub.imagenes
+                                                .carousel-item(class=imgIndex === 0 ? "active" : "")
+                                                    img.d-block.w-100(src=img.url style="height: 200px; object-fit: cover;")
+
+                                        if pub.imagenes.length > 1
+                                            button.carousel-control-prev(type="button" data-bs-target=`#carousel-${pub.id}` data-bs-slide="prev")
+                                                span.carousel-control-prev-icon
+                                            button.carousel-control-next(type="button" data-bs-target=`#carousel-${pub.id}` data-bs-slide="next")
+                                                span.carousel-control-next-icon
+                                else
+                                    .card-img-top.bg-secondary.d-flex.align-items-center.justify-content-center(style="height: 200px;")
+                                        span.text-white Sin imagen
+
+                                .card-body
+                                    h5.card-title= pub.titulo
+                                    p.card-text= pub.descripcion.substring(0, 100)
+
+                                    if pub.etiquetas && pub.etiquetas.length
+                                        .mb-2
+                                            each etiq in pub.etiquetas
+                                                if esMiPerfil
+                                                    a.badge.bg-primary.me-1.text-decoration-none(href=`/perfil?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+                                                else
+                                                    a.badge.bg-primary.me-1.text-decoration-none(href=`/perfil/${perfil ? perfil.username : usuario.username}?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+
+                                    if esMiPerfil
+                                        .mt-2
+                                            a.btn.btn-warning.btn-sm.me-2(href=`/publicaciones/${pub.id}/editar`)
+                                                i.bi.bi-pencil-square
+                                                |  Editar
+
+                                            form.d-inline(method="POST" action=`/publicaciones/${pub.id}/eliminar` onsubmit="return confirm('¿Eliminar esta publicacion?')")
+                                                button.btn.btn-danger.btn-sm(type="submit")
+                                                    i.bi.bi-trash
+                                                    |  Eliminar
+
                                     .mt-2
-                                        a.btn.btn-warning.btn-sm.me-2(href=`/publicaciones/${pub.id}/editar`)
-                                            i.bi.bi-pencil-square
-                                            |  Editar
+                                        a.btn.btn-outline-primary.btn-sm(href=`/publicaciones/${pub.id}`)
+                                            i.bi.bi-eye
+                                            |  Ver más
 
-                                        // Boton eliminar
-                                        form.d-inline(method="POST" action=`/publicaciones/${pub.id}/eliminar` onsubmit="return confirm('¿Eliminar esta publicacion?')")
-                                            button.btn.btn-danger.btn-sm(type="submit")
-                                                i.bi.bi-trash
-                                                |  Eliminar
+                                .card-footer.text-muted
+                                    small Creado: #{pub.createdAt.toLocaleDateString()}
+            else
+                .alert.alert-info
+                    if esMiPerfil
+                        p.mb-0 No tenes publicaciones todavia.
+                        a.btn.btn-primary.mt-3(href="/publicaciones/crear") Crear mi primera publicacion
+                    else
+                        p.mb-0 #{perfil ? perfil.username : usuario.username} no tiene publicaciones todavia.
 
-                                // Boton "Ver más" para todos los perfiles
-                                .mt-2
-                                    a.btn.btn-outline-primary.btn-sm(href=`/publicaciones/${pub.id}`)
-                                        i.bi.bi-eye
-                                        |  Ver más
+    // Modal de Seguidores
+    .modal.fade(id="seguidoresModal" tabindex="-1" aria-labelledby="seguidoresModalLabel" aria-hidden="true")
+        .modal-dialog
+            .modal-content
+                .modal-header
+                    h5.modal-title(id="seguidoresModalLabel") Seguidores de #{perfil ? perfil.username : (usuario ? usuario.username : 'Usuario')}
+                    button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+                .modal-body
+                    if seguidoresLista && seguidoresLista.length
+                        each seguidor in seguidoresLista
+                            .d-flex.align-items-center.justify-content-between.mb-2.p-2.border.rounded
+                                span
+                                    i.bi.bi-person-circle.me-2
+                                    strong #{seguidor.username}
+                                a.btn.btn-sm.btn-outline-primary(href=`/perfil/${seguidor.username}`)
+                                    i.bi.bi-eye
+                                    |  Ver perfil
+                    else
+                        p.text-muted No tiene seguidores todavia.
+                .modal-footer
+                    button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cerrar
 
-                            .card-footer.text-muted
-                                small Creado: #{pub.createdAt.toLocaleDateString()}
-        else
-            .alert.alert-info
-                if esMiPerfil
-                    p.mb-0 No tenes publicaciones todavia.
-                    a.btn.btn-primary.mt-3(href="/publicaciones/crear") Crear mi primera publicacion
-                else
-                    p.mb-0 #{usuario.username} no tiene publicaciones todavia.
+    // Modal de Seguidos
+    .modal.fade(id="seguidosModal" tabindex="-1" aria-labelledby="seguidosModalLabel" aria-hidden="true")
+        .modal-dialog
+            .modal-content
+                .modal-header
+                    h5.modal-title(id="seguidosModalLabel") Usuarios que sigue #{perfil ? perfil.username : (usuario ? usuario.username : 'Usuario')}
+                    button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+                .modal-body
+                    if seguidosLista && seguidosLista.length
+                        each seguido in seguidosLista
+                            .d-flex.align-items-center.justify-content-between.mb-2.p-2.border.rounded
+                                span
+                                    i.bi.bi-person-circle.me-2
+                                    strong #{seguido.username}
+                                a.btn.btn-sm.btn-outline-primary(href=`/perfil/${seguido.username}`)
+                                    i.bi.bi-eye
+                                    |  Ver perfil
+                    else
+                        p.text-muted No sigue a nadie todavia.
+                .modal-footer
+                    button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cerrar

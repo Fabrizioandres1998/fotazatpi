@@ -75,7 +75,7 @@ router.get('/:id', async (req, res) => {
         // Traer comentarios con los datos del usuario
         const comentarios = await comentario.findAll({
             where: { id_publicacion: req.params.id },
-            include: [{ model: Usuario }],  // ← AGREGAR ESTO
+            include: [{ model: Usuario }], 
             order: [['createdAt', 'ASC']]
         });
 
@@ -86,7 +86,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// post comentario - CORREGIDO
+// post comentario 
 router.post('/:id/comentario', async (req, res) => {
     try {
         const { id } = req.params;
@@ -119,7 +119,6 @@ router.post('/:id/comentario', async (req, res) => {
     }
 });
 
-// el resto de las rutas (editar, actualizar, eliminar) quedan igual
 // mostrar formulario de edicion
 router.get('/:id/editar', async (req, res) => {
     try {

@@ -34,7 +34,9 @@ block content
                                             |  #{pub.Usuario.username}
 
                             .card-footer.bg-transparent
-                                a.btn.btn-sm.btn-outline-primary(href=`/publicaciones/${pub.id}`) Ver mas
+                                a.btn.btn-sm.btn-outline-primary(href=`/publicaciones/${pub.id}`)
+                                    i.bi.bi-eye
+                                        |  Ver más
         else
             .alert.alert-info
                 if filtro

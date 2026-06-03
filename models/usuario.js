@@ -1,12 +1,26 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Usuario extends Model {
     static associate(models) {
       Usuario.hasMany(models.Publicacion, { foreignKey: "id_usuario" });
-      Usuario.hasMany(models.comentario, { foreignKey: 'id_usuario' }); // ← AGREGAR ESTA
+      Usuario.hasMany(models.comentario, { foreignKey: 'id_usuario' });
+      
+      // usuarios que SIGO (mis seguidos)
+      Usuario.belongsToMany(models.Usuario, {
+        through: 'follower',  // ← usar STRING, NO models.follower
+        as: 'seguidos',
+        foreignKey: 'id_seguidor',
+        otherKey: 'id_seguido'
+      });
+      
+      // Usuarios que me SIGUEN (mis seguidores)
+      Usuario.belongsToMany(models.Usuario, {
+        through: 'follower',  
+        as: 'seguidores',
+        foreignKey: 'id_seguido',
+        otherKey: 'id_seguidor'
+      });
     }
   }
 

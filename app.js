@@ -17,6 +17,7 @@ const registroRouter = require('./routes/registro');
 const perfilRouter = require('./routes/perfil');
 const crearPublicacionRouter = require('./routes/crearPublicacion');
 const publicacionesRouter = require('./routes/publicaciones');
+const followerRouter = require('./routes/follower');
 
 // IMPORTACION MIDDLEWARES PROPIOS
 const authMiddleware = require('./middlewares/authMiddleware');
@@ -48,7 +49,7 @@ app.use(session({
   })
 }));
 
-// FLASH DESPUÉS DE LA SESIÓN
+// FLASH 
 app.use(flash());
 
 // MIDDLEWARE PARA PASAR SESSION A LAS VISTAS
@@ -70,7 +71,7 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// MIDDLEWARE PARA MENSAJES FLASH (DESPUÉS DE FLASH)
+// MIDDLEWARE PARA MENSAJES FLASH 
 app.use((req, res, next) => {
   res.locals.success_msg = req.flash('success');
   res.locals.error_msg = req.flash('error');
@@ -86,6 +87,8 @@ app.use('/perfil', authMiddleware, perfilRouter);
 app.use('/publicaciones', authMiddleware, crearPublicacionRouter);
 app.use('/publicaciones', publicacionesRouter);
 app.use('/', publicacionesRouter);
+app.use('/follower', followerRouter);
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
