@@ -1,14 +1,14 @@
 'use strict';
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('follower', {
+    await queryInterface.createTable('valoracion', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      id_seguidor: {
+      id_usuario: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
@@ -18,15 +18,23 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
-      id_seguido: {
+      id_publicacion: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'usuario',
+          model: 'publicacion',
           key: 'id'
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
+      },
+      puntaje: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        validate: {
+          min: 1,
+          max: 5
+        }
       },
       createdAt: {
         allowNull: false,
@@ -38,13 +46,13 @@ module.exports = {
       }
     });
     
-    await queryInterface.addIndex('follower', ['id_seguidor', 'id_seguido'], {
+    await queryInterface.addIndex('valoracion', ['id_usuario', 'id_publicacion'], {
       unique: true,
-      name: 'unique_seguidor_seguido'
+      name: 'unique_usuario_publicacion'
     });
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('follower');
+    await queryInterface.dropTable('valoracion');
   }
 };

@@ -5,18 +5,18 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Usuario.hasMany(models.Publicacion, { foreignKey: "id_usuario" });
       Usuario.hasMany(models.comentario, { foreignKey: 'id_usuario' });
-      
+      Usuario.hasMany(models.Valoracion, { foreignKey: 'id_usuario', as: 'valoraciones' });
       // usuarios que SIGO (mis seguidos)
       Usuario.belongsToMany(models.Usuario, {
-        through: 'follower',  // ← usar STRING, NO models.follower
+        through: 'follower',
         as: 'seguidos',
         foreignKey: 'id_seguidor',
         otherKey: 'id_seguido'
       });
-      
+
       // Usuarios que me SIGUEN (mis seguidores)
       Usuario.belongsToMany(models.Usuario, {
-        through: 'follower',  
+        through: 'follower',
         as: 'seguidores',
         foreignKey: 'id_seguido',
         otherKey: 'id_seguidor'
