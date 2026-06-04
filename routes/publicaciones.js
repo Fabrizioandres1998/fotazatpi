@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { Publicacion, Imagen, Usuario, Etiqueta, comentario } = require('../models');
+const { Publicacion, Imagen, Usuario, Etiqueta, comentario, Valoracion, reporte_publicacion } = require('../models');
+const { sequelize } = require('../models');
 
 // listar todas o filtrar por etiqueta
 router.get('/', async (req, res) => {
@@ -72,14 +73,49 @@ router.get('/:id', async (req, res) => {
             return res.status(404).send("Publicación no encontrada");
         }
 
-        // Traer comentarios con los datos del usuario
+        // traer comentarios con los datos del usuario
         const comentarios = await comentario.findAll({
             where: { id_publicacion: req.params.id },
-            include: [{ model: Usuario }], 
+            include: [{ model: Usuario }],
             order: [['createdAt', 'ASC']]
         });
 
-        res.render('publicacion', { publicacion, comentarios });
+        // promedio de votos
+        const stats = await Valoracion.findAll({
+            where: { id_publicacion: req.params.id },
+            attributes: [
+                [sequelize.fn('AVG', sequelize.col('puntaje')), 'promedio'],
+                [sequelize.fn('COUNT', sequelize.col('id')), 'cantidad']
+            ]
+        });
+
+        // verificar si el usuario ya voto
+        let votoUsuario = null;
+        if (req.session.id_usuario) {
+            votoUsuario = await Valoracion.findOne({
+                where: {
+                    id_usuario: req.session.id_usuario,
+                    id_publicacion: req.params.id
+                }
+            });
+        }
+
+        const promedio = parseFloat(stats[0]?.dataValues?.promedio || 0);
+        const cantidadVotos = parseInt(stats[0]?.dataValues?.cantidad || 0);
+
+        // contar reportes de esta publicacion
+        const cantidadReportes = await reporte_publicacion.count({
+            where: { id_publicacion: req.params.id }
+        });
+
+        res.render('publicacion', {
+            publicacion,
+            comentarios,
+            promedio,
+            cantidadVotos,
+            votoUsuario: votoUsuario ? votoUsuario.puntaje : null,
+            cantidadReportes  
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send("Error al cargar la publicación");

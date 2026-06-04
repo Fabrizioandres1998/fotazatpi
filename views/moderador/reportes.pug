@@ -1,0 +1,27 @@
+extends ../layout
+
+block content
+    .container.mt-4
+        h1.mb-4 Panel de Moderador
+        h2 Publicaciones reportadas (3+ reportes)
+        
+        if publicaciones && publicaciones.length > 0
+            .row
+                each pub in publicaciones
+                    .col-md-6.mb-3
+                        .card
+                            if pub.imagenes && pub.imagenes[0]
+                                img.card-img-top(src=pub.imagenes[0].url style="height: 150px; object-fit: cover;")
+                            .card-body
+                                h5.card-title= pub.titulo
+                                p.card-text= pub.descripcion.substring(0, 100)
+                                p
+                                    strong Autor: 
+                                    a(href=`/perfil/${pub.Usuario.username}`)= pub.Usuario.username
+                                p
+                                    strong Reportes: 
+                                    span.badge.bg-danger= pub.cantidadReportes
+                                a.btn.btn-sm.btn-primary(href=`/moderador/reportes/publicacion/${pub.id}`) Revisar
+        else
+            .alert.alert-success
+                p No hay publicaciones con reportes pendientes

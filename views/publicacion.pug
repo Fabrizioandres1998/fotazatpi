@@ -1,12 +1,13 @@
 extends layout
 
 block content
+
     .container.mt-4
 
         a.btn.btn-secondary.mb-3(href="/publicaciones") Volver
 
         if publicacion
-            // DATOS DE LA PUBLICACIÓN
+            // DATOS DE LA PUBLICACION
             h1.mb-4= publicacion.titulo
 
             .row
@@ -25,6 +26,44 @@ block content
                             strong Etiquetas: 
                             each etiq in publicacion.etiquetas
                                 a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+
+                    // SECCION DE VALORACION
+                    if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
+                        .card.mt-3.mb-3
+                            .card-header
+                                strong Valorar publicación
+                            .card-body
+                                form(action=`/valoracion/publicacion/${publicacion.id}`, method="POST" class="d-flex align-items-center gap-3")
+                                    label.me-2 Puntuacion:
+                                    input(type="range" name="puntaje" min="1" max="5" step="1", value=votoUsuario || 3, oninput="this.nextElementSibling.value = this.value")
+                                    output #{votoUsuario || 3}
+                                    button.btn.btn-primary(type="submit") 
+                                        if votoUsuario
+                                            | Actualizar voto
+                                        else
+                                            | Votar
+
+                    // Mostrar promedio de votos
+                    if cantidadVotos > 0
+                        .alert.alert-info.mt-2
+                            strong Promedio: 
+                            | #{promedio.toFixed(1)} / 5.0
+                            |  (#{cantidadVotos} voto#{cantidadVotos !== 1 ? 's' : ''})
+                    else
+                        .alert.alert-secondary.mt-2
+                            | Sin valoraciones aún. ¡Sé el primero!
+
+                    if cantidadReportes > 0
+                        .mt-2
+                            small.text-muted 
+                                | Reportes: #{cantidadReportes}/3
+
+                    // BOTON DE REPORTE (abre modal)
+                    if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
+                        .mt-3
+                            button.btn.btn-outline-danger.btn-sm(type="button" data-bs-toggle="modal" data-bs-target="#modalReporte")
+                                i.bi.bi-flag
+                                |  Reportar publicación
 
                 .col-md-5
                     if publicacion.imagenes && publicacion.imagenes.length
@@ -52,7 +91,7 @@ block content
                         .alert.alert-info
                             p No hay imagenes para esta publicacion
 
-            // SECCIÓN DE COMENTARIOS
+            // SECCION DE COMENTARIOS
             .row.mt-5
                 .col-12
                     hr
@@ -84,6 +123,34 @@ block content
                             p.mb-0 
                                 a(href="/login") Inicia sesión
                                 |  para comentar
+
+            // MODAL DE REPORTE (dentro del if publicacion)
+            if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
+                .modal.fade(id="modalReporte" tabindex="-1")
+                    .modal-dialog
+                        .modal-content
+                            .modal-header
+                                h5.modal-title Reportar publicación
+                                button.btn-close(type="button" data-bs-dismiss="modal")
+                            .modal-body
+                                form(action=`/reportes/publicacion/${publicacion.id}`, method="POST" id="formReporte")
+                                    .mb-3
+                                        label.form-label(for="motivo") Motivo *
+                                        select.form-select(name="motivo" id="motivo", required)
+                                            option(value="") Seleccione un motivo
+                                            option(value="spam") Spam o publicidad
+                                            option(value="contenido_inapropiado") Contenido inapropiado
+                                            option(value="violencia") Violencia
+                                            option(value="odio") Discurso de odio
+                                            option(value="copyright") Violación de copyright
+
+                                    .mb-3
+                                        label.form-label(for="descripcion") Descripción (opcional)
+                                        textarea.form-control(name="descripcion" id="descripcion" rows="3" placeholder="Explica con más detalles...")
+
+                                    .modal-footer
+                                        button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancelar
+                                        button.btn.btn-danger(type="submit") Enviar reporte
         else
             .alert.alert-danger
                 p Publicación no encontrada

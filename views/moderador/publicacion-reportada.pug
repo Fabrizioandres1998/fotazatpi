@@ -1,0 +1,54 @@
+extends ../layout
+
+block content
+    .container.mt-4
+        a.btn.btn-secondary.mb-3(href="/moderador/reportes") Volver
+        
+        h1.mb-4 Revisar publicación reportada
+        
+        .row
+            .col-md-8
+                .card
+                    .card-header
+                        strong= publicacion.titulo
+                    .card-body
+                        p= publicacion.descripcion
+                        p
+                            strong Autor: 
+                            a(href=`/perfil/${publicacion.Usuario.username}`)= publicacion.Usuario.username
+                        if publicacion.imagenes && publicacion.imagenes.length
+                            each img in publicacion.imagenes
+                                img.img-fluid.mb-2(src=img.url style="max-width: 100%;")
+        
+        .row.mt-4
+            .col-12
+                h3 Reportes recibidos
+                if reportes && reportes.length > 0
+                    each reporte in reportes
+                        .card.mb-2
+                            .card-body
+                                p
+                                    strong Usuario: 
+                                    a(href=`/perfil/${reporte.usuario.username}`)= reporte.usuario.username
+                                p
+                                    strong Motivo: 
+                                    span.badge.bg-warning= reporte.motivo
+                                if reporte.descripcion
+                                    p
+                                        strong Descripción: 
+                                        br
+                                        | #{reporte.descripcion}
+                                small.text-muted Reportado el: #{reporte.createdAt}
+                else
+                    .alert.alert-info
+                        p No hay reportes registrados
+        
+        .row.mt-4
+            .col-12
+                hr
+                .d-flex.gap-3
+                    form(action=`/moderador/reportes/publicacion/${publicacion.id}/eliminar`, method="POST", onsubmit="return confirm('¿Eliminar esta publicación definitivamente?')")
+                        button.btn.btn-danger(type="submit") Dar de baja publicación
+                    
+                    form(action=`/moderador/reportes/publicacion/${publicacion.id}/desestimar`, method="POST")
+                        button.btn.btn-secondary(type="submit") Desestimar reportes

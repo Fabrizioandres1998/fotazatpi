@@ -32,8 +32,9 @@ router.post('/', async (req, res) => {
 
     // guardo los datos en sesion
     req.session.id_usuario = usuario.id;
+    req.session.rol = usuario.rol;
     req.session.username = usuario.username;
-    
+
     return res.redirect('/');
 
   } catch (error) {

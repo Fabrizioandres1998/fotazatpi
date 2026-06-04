@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'id_seguidor',
         otherKey: 'id_seguido'
       });
-
+      Usuario.hasMany(models.reporte_publicacion, { foreignKey: 'id_usuario', as: 'reportes' });
       // Usuarios que me SIGUEN (mis seguidores)
       Usuario.belongsToMany(models.Usuario, {
         through: 'follower',
