@@ -39,7 +39,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ========== CONFIGURACIÓN DE SESIÓN MEJORADA ==========
+// ========== CONFIGURACIÓN DE SESIÓN CORREGIDA ==========
 // Crear el store de sesión
 const sessionStore = new SequelizeStore({
   db: sequelize,
@@ -51,22 +51,25 @@ const sessionStore = new SequelizeStore({
 // Sincronizar el store al iniciar
 sessionStore.sync();
 
-// Configuración de sesión
+// Configuración de sesión CORREGIDA para Railway
+const isProduction = process.env.NODE_ENV === 'production';
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'miSecretoPorDefecto',
   resave: false,
   saveUninitialized: false,
   store: sessionStore,
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // IMPORTANTE: solo HTTPS en producción
+    secure: false,  // ← CAMBIADO: false para Railway (maneja HTTPS con proxy)
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 horas
-    sameSite: 'lax' // Mejora la seguridad
+    sameSite: 'lax'
   },
-  name: 'sessionId' // Nombre personalizado para la cookie
+  name: 'sessionId', // Nombre personalizado para la cookie
+  proxy: true        // ← IMPORTANTE: Railway usa proxy
 }));
 
-// ========== MIDDLEWARE DE DEBUG DE SESIÓN (agregar esto) ==========
+// ========== MIDDLEWARE DE DEBUG DE SESIÓN ==========
 app.use((req, res, next) => {
   console.log('\n=== 🔍 DEBUG SESIÓN ===');
   console.log('📌 Ruta:', req.method, req.originalUrl);
@@ -78,6 +81,7 @@ app.use((req, res, next) => {
     username: req.session?.username
   });
   console.log('⏰ Expira:', req.session?.cookie?.expires);
+  console.log('🌐 Entorno:', process.env.NODE_ENV);
   console.log('=====================\n');
   next();
 });
@@ -88,10 +92,6 @@ app.use(flash());
 // ========== MIDDLEWARE PARA PASAR SESSION A LAS VISTAS ==========
 app.use((req, res, next) => {
   res.locals.session = req.session;
-  res.locals.messages = {
-    success: req.flash('success'),
-    error: req.flash('error')
-  };
   next();
 });
 
@@ -117,7 +117,7 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// ========== MIDDLEWARE PARA MENSAJES FLASH MEJORADO ==========
+// ========== MIDDLEWARE PARA MENSAJES FLASH ==========
 app.use((req, res, next) => {
   res.locals.success_msg = req.flash('success');
   res.locals.error_msg = req.flash('error');
@@ -125,28 +125,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// ========== MIDDLEWARE PARA VERIFICAR SESIÓN EN CADA REQUEST ==========
-app.use((req, res, next) => {
-  // Guardar la sesión después de cada modificación
-  const originalSave = req.session.save;
-  req.session.save = function(callback) {
-    console.log('💾 Guardando sesión...');
-    originalSave.call(this, (err) => {
-      if (err) {
-        console.error('❌ Error guardando sesión:', err);
-      } else {
-        console.log('✅ Sesión guardada exitosamente');
-      }
-      if (callback) callback(err);
-    });
-  };
-  next();
-});
-
 // ========== MIDDLEWARE DE AUTENTICACIÓN GLOBAL ==========
 app.use((req, res, next) => {
   const publicPaths = ['/login', '/registro', '/', '/publicaciones'];
-  const isPublicPath = publicPaths.some(path => req.path === path || req.path.startsWith('/publicaciones'));
+  const isPublicPath = publicPaths.some(path => req.path === path || req.path.startsWith('/publicaciones') || req.path === '/favicon.ico');
   const isStaticFile = req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico)$/);
   
   if (!isPublicPath && !isStaticFile && !req.session.id_usuario) {
@@ -169,24 +151,6 @@ app.use('/follower', followerRouter);
 app.use('/valoracion', valoracionRouter);
 app.use('/reportes', reportePublicacionRouter);
 app.use('/moderador', moderadorRouter);
-
-// ========== MIDDLEWARE PARA VERIFICAR STORE DE SESIÓN ==========
-app.use((req, res, next) => {
-  // Verificar que la sesión se guardó correctamente después de login
-  if (req.method === 'POST' && req.path === '/login') {
-    const originalRedirect = res.redirect;
-    res.redirect = function(url) {
-      console.log('🔄 Redirigiendo a:', url);
-      console.log('Estado de la sesión después de POST login:', {
-        id_usuario: req.session?.id_usuario,
-        rol: req.session?.rol,
-        sessionId: req.session?.id
-      });
-      originalRedirect.call(this, url);
-    };
-  }
-  next();
-});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
