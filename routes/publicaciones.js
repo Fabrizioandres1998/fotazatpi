@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Publicacion, Imagen, Usuario, Etiqueta, comentario, Valoracion, reporte_publicacion } = require('../models');
+const { Publicacion, Imagen, Usuario, Etiqueta, comentario, Valoracion, reporte_publicacion, me_interesa } = require('../models');
 const { sequelize } = require('../models');
 
 // listar todas o filtrar por etiqueta
@@ -108,13 +108,32 @@ router.get('/:id', async (req, res) => {
             where: { id_publicacion: req.params.id }
         });
 
+        // contador me interesa
+        const interesadosCount = await me_interesa.count({
+            where: { id_publicacion: req.params.id }
+        });
+
+        // verificar si el usuario ya marco 
+        let yaInteresado = false;
+        if (req.session.id_usuario) {
+            const interes = await me_interesa.findOne({
+                where: {
+                    id_usuario: req.session.id_usuario,
+                    id_publicacion: req.params.id
+                }
+            });
+            yaInteresado = !!interes;
+        }
+
         res.render('publicacion', {
             publicacion,
             comentarios,
             promedio,
             cantidadVotos,
             votoUsuario: votoUsuario ? votoUsuario.puntaje : null,
-            cantidadReportes  
+            cantidadReportes,
+            interesadosCount,
+            yaInteresado
         });
     } catch (error) {
         console.error(error);

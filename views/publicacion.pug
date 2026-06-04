@@ -65,6 +65,21 @@ block content
                                 i.bi.bi-flag
                                 |  Reportar publicación
 
+                    // BOTÓN ME INTERESA
+                    if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
+                        .mt-3
+                            form(action=`/me-interesa/publicacion/${publicacion.id}`, method="POST", class="d-inline")
+                                if yaInteresado
+                                    button.btn.btn-outline-secondary.btn-sm(type="submit")
+                                        i.bi.bi-hand-thumbs-down
+                                        |  No me interesa
+                                else
+                                    button.btn.btn-outline-success.btn-sm(type="submit")
+                                        i.bi.bi-hand-thumbs-up
+                                        |  Me interesa
+                            span.ms-2.text-muted(id=`interesados-${publicacion.id}`) 
+                                | #{interesadosCount || 0} interesados
+
                 .col-md-5
                     if publicacion.imagenes && publicacion.imagenes.length
                         #carouselImagenes.carousel.slide(data-bs-ride="carousel")

@@ -17,20 +17,20 @@ router.post('/publicacion/:id', authMiddleware, async (req, res) => {
             return res.redirect('back');
         }
 
-        // Verificar que la publicación existe
+        // Verificar que la publicacion existe
         const publicacion = await Publicacion.findByPk(id_publicacion);
         if (!publicacion) {
             req.flash('error', 'Publicación no encontrada');
             return res.redirect('back');
         }
 
-        // No reportar propia publicación
+        // No reportar propia publicacion
         if (publicacion.id_usuario === id_usuario) {
             req.flash('error', 'No puedes reportar tu propia publicación');
             return res.redirect('back');
         }
 
-        // Verificar si ya reportó
+        // Verificar si ya report
         const reporteExistente = await reporte_publicacion.findOne({
             where: { id_usuario, id_publicacion }
         });
@@ -40,7 +40,7 @@ router.post('/publicacion/:id', authMiddleware, async (req, res) => {
             return res.redirect('back');
         }
 
-        // Crear reporte
+        // crear reporte
         await reporte_publicacion.create({
             id_publicacion,
             id_usuario,
@@ -49,7 +49,7 @@ router.post('/publicacion/:id', authMiddleware, async (req, res) => {
             estado: 'pendiente'
         });
 
-        // Contar reportes de esta publicación
+        // Contar reportes de esta publicacion
         const cantidadReportes = await reporte_publicacion.count({
             where: { id_publicacion }
         });

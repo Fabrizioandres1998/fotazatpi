@@ -21,6 +21,7 @@ const followerRouter = require('./routes/follower');
 const valoracionRouter = require('./routes/valoracion');
 const reportePublicacionRouter = require('./routes/reportePublicacion');
 const moderadorRouter = require('./routes/moderador');
+const meInteresaRouter = require('./routes/meInteresa');
 
 // IMPORTACION MIDDLEWARES PROPIOS
 const authMiddleware = require('./middlewares/authMiddleware');
@@ -39,20 +40,15 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ========== CONFIGURACIÓN DE SESIÓN CORREGIDA ==========
-// Crear el store de sesión
+// CONFIGURACION DE SESION
 const sessionStore = new SequelizeStore({
   db: sequelize,
-  checkExpirationInterval: 15 * 60 * 1000, // 15 minutos
-  expiration: 24 * 60 * 60 * 1000, // 24 horas
+  checkExpirationInterval: 15 * 60 * 1000,
+  expiration: 24 * 60 * 60 * 1000,
   tableName: 'Sessions'
 });
 
-// Sincronizar el store al iniciar
 sessionStore.sync();
-
-// Configuración de sesión CORREGIDA para Railway
-const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'miSecretoPorDefecto',
@@ -60,42 +56,22 @@ app.use(session({
   saveUninitialized: false,
   store: sessionStore,
   cookie: {
-    secure: false,  // ← CAMBIADO: false para Railway (maneja HTTPS con proxy)
+    secure: false,
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 horas
+    maxAge: 24 * 60 * 60 * 1000,
     sameSite: 'lax'
   },
-  name: 'sessionId', // Nombre personalizado para la cookie
-  proxy: true        // ← IMPORTANTE: Railway usa proxy
+  name: 'sessionId',
+  proxy: true
 }));
 
-// ========== MIDDLEWARE DE DEBUG DE SESIÓN ==========
-app.use((req, res, next) => {
-  console.log('\n=== 🔍 DEBUG SESIÓN ===');
-  console.log('📌 Ruta:', req.method, req.originalUrl);
-  console.log('🍪 Cookie recibida:', req.headers.cookie);
-  console.log('🆔 Session ID:', req.session?.id);
-  console.log('📦 Datos en sesión:', {
-    id_usuario: req.session?.id_usuario,
-    rol: req.session?.rol,
-    username: req.session?.username
-  });
-  console.log('⏰ Expira:', req.session?.cookie?.expires);
-  console.log('🌐 Entorno:', process.env.NODE_ENV);
-  console.log('=====================\n');
-  next();
-});
-
-// FLASH 
-app.use(flash());
-
-// ========== MIDDLEWARE PARA PASAR SESSION A LAS VISTAS ==========
+// MIDDLEWARE PARA PASAR SESSION A LAS VISTAS
 app.use((req, res, next) => {
   res.locals.session = req.session;
   next();
 });
 
-// ========== MIDDLEWARE PARA CARGAR USUARIO EN LAS VISTAS ==========
+// MIDDLEWARE PARA CARGAR USUARIO EN LAS VISTAS
 app.use(async (req, res, next) => {
   if (req.session.id_usuario) {
     try {
@@ -103,36 +79,23 @@ app.use(async (req, res, next) => {
       if (usuario) {
         res.locals.usuario = usuario;
         res.locals.userId = usuario.id;
-        console.log('✅ Usuario cargado en vistas:', usuario.username);
       } else {
-        console.warn('⚠️ Usuario no encontrado en BD, limpiando sesión');
         req.session.destroy();
       }
     } catch (error) {
-      console.error('❌ Error cargando usuario:', error);
+      console.error('Error cargando usuario:', error);
     }
-  } else {
-    console.log('⚠️ No hay usuario en sesión');
   }
   next();
 });
 
-// ========== MIDDLEWARE PARA MENSAJES FLASH ==========
-app.use((req, res, next) => {
-  res.locals.success_msg = req.flash('success');
-  res.locals.error_msg = req.flash('error');
-  res.locals.user = req.session.id_usuario || null;
-  next();
-});
-
-// ========== MIDDLEWARE DE AUTENTICACIÓN GLOBAL ==========
+// MIDDLEWARE DE AUTENTICACIÓN GLOBAL
 app.use((req, res, next) => {
   const publicPaths = ['/login', '/registro', '/', '/publicaciones'];
   const isPublicPath = publicPaths.some(path => req.path === path || req.path.startsWith('/publicaciones') || req.path === '/favicon.ico');
   const isStaticFile = req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico)$/);
-  
+
   if (!isPublicPath && !isStaticFile && !req.session.id_usuario) {
-    console.log('🔒 Acceso denegado a:', req.path, '- Redirigiendo a login');
     req.flash('error', 'Por favor inicia sesión para acceder a esta página');
     return res.redirect('/login');
   }
@@ -151,19 +114,19 @@ app.use('/follower', followerRouter);
 app.use('/valoracion', valoracionRouter);
 app.use('/reportes', reportePublicacionRouter);
 app.use('/moderador', moderadorRouter);
+app.use('/me-interesa', meInteresaRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
   res.status(err.status || 500);
   res.render('error');
 });
 
-// ========== EXPORTAR APP ==========
 module.exports = app;

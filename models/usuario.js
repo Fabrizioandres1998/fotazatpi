@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'id_seguido'
       });
       Usuario.hasMany(models.reporte_publicacion, { foreignKey: 'id_usuario', as: 'reportes' });
+      Usuario.hasMany(models.me_interesa, { foreignKey: 'id_usuario', as: 'intereses' });
       // Usuarios que me SIGUEN (mis seguidores)
       Usuario.belongsToMany(models.Usuario, {
         through: 'follower',

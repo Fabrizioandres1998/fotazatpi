@@ -1,29 +1,29 @@
 nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
     .container
-        a.navbar-brand(href="/publicaciones")
+        a.navbar-brand(href="/")
             | Fotaza
-            i.bi.bi-camera2.ms-1
-
-
+            i.bi.bi-camera-fill.ms-2
         button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav")
             span.navbar-toggler-icon
-
         .collapse.navbar-collapse(id="navbarNav")
-            ul.navbar-nav.me-auto
-                li.nav-item
-                    a.nav-link(href="/publicaciones") Inicio
-                li.nav-item
-                    a.nav-link(href="/perfil") Perfil
+            ul.navbar-nav.ms-auto
                 if session && session.id_usuario
                     li.nav-item
-                        a.nav-link(href="/publicaciones/crear") Nueva Publicación
-
-            ul.navbar-nav
-                if session && session.id_usuario
+                        span.nav-link.text-success
+                            i.bi.bi-person-circle
+                            |  #{session.username}
                     li.nav-item
-                        span.nav-link.text-light Hola, #{session.username || 'Usuario'}
+                        a.nav-link(href="/publicaciones") Publicaciones
                     li.nav-item
-                        a.nav-link(href="#" data-bs-toggle="modal" data-bs-target="#logoutModal") Cerrar sesión
+                        a.nav-link(href="/perfil") Mi Perfil
+                    if session.rol === 'moderador'
+                        li.nav-item
+                            a.nav-link(href="/moderador/reportes" class="moderador-link")
+                                i.bi.bi-shield-shaded
+                                |  Panel Moderador
+                    li.nav-item
+                        form(action="/logout" method="POST")
+                            button.btn.btn-link.nav-link(type="submit") Cerrar sesión
                 else
                     li.nav-item
                         a.nav-link(href="/login") Iniciar sesión
