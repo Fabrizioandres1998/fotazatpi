@@ -8,7 +8,7 @@ var SequelizeStore = require('connect-session-sequelize')(session.Store);
 const flash = require('connect-flash');
 
 // IMPORTACION DE MODELOS Y SEQUELIZE
-const { Usuario, sequelize } = require('./models');
+const { Usuario, sequelize, notificacion } = require('./models');
 
 // IMPORTACION RUTAS
 const loginRouter = require('./routes/login');
@@ -22,6 +22,7 @@ const valoracionRouter = require('./routes/valoracion');
 const reportePublicacionRouter = require('./routes/reportePublicacion');
 const moderadorRouter = require('./routes/moderador');
 const meInteresaRouter = require('./routes/meInteresa');
+const notificacionesRouter = require('./routes/notificaciones');
 
 // IMPORTACION MIDDLEWARES PROPIOS
 const authMiddleware = require('./middlewares/authMiddleware');
@@ -64,6 +65,19 @@ app.use(session({
   name: 'sessionId',
   proxy: true
 }));
+
+// Middleware para contar notificaciones no leídas
+app.use(async (req, res, next) => {
+  if (req.session.id_usuario) {
+    const noLeidas = await notificacion.count({
+      where: { id_usuario_destino: req.session.id_usuario, leida: false }
+    });
+    res.locals.notificacionesNoLeidas = noLeidas;
+  } else {
+    res.locals.notificacionesNoLeidas = 0;
+  }
+  next();
+});
 
 // MIDDLEWARE PARA PASAR SESSION A LAS VISTAS
 app.use((req, res, next) => {
@@ -115,6 +129,7 @@ app.use('/valoracion', valoracionRouter);
 app.use('/reportes', reportePublicacionRouter);
 app.use('/moderador', moderadorRouter);
 app.use('/me-interesa', meInteresaRouter);
+app.use('/notificaciones', notificacionesRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

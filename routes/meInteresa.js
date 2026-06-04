@@ -1,7 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { me_interesa, Publicacion } = require('../models');
+const { me_interesa, Publicacion, notificacion } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
+
+// funcion para crear notificacion
+async function crearNotificacion(id_usuario_destino, id_usuario_origen, mensaje) {
+    try {
+        await notificacion.create({
+            id_usuario_destino,
+            id_usuario_origen,
+            mensaje,
+            leida: false
+        });
+    } catch (error) {
+        console.error('Error al crear notificación:', error);
+    }
+}
 
 // marcar o quitar me interesa
 router.post('/publicacion/:id', authMiddleware, async (req, res) => {
@@ -26,6 +40,15 @@ router.post('/publicacion/:id', authMiddleware, async (req, res) => {
         } else {
             // marcar interes
             await me_interesa.create({ id_usuario, id_publicacion });
+
+            // Crear notificacion para el dueño de la publicacion
+            if (publicacion.id_usuario !== id_usuario) {
+                await crearNotificacion(
+                    publicacion.id_usuario,
+                    id_usuario,
+                    ` le interesa tu publicación "${publicacion.titulo.substring(0, 50)}"`
+                );
+            }
         }
 
         res.redirect('back');

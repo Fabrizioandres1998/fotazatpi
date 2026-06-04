@@ -7,7 +7,7 @@ const moderadorMiddleware = require('../middlewares/moderadorMiddleware');
 // Aplicar middleware a todas las rutas de moderador
 router.use(moderadorMiddleware);
 
-// Panel principal: publicaciones con 3 o más reportes pendientes
+// Panel principal publicaciones con 3 o mas reportes pendientes
 router.get('/reportes', async (req, res) => {
     try {
         // Obtener todas las publicaciones que tienen reportes
@@ -47,7 +47,7 @@ router.get('/reportes', async (req, res) => {
     }
 });
 
-// Ver detalles de una publicación reportada
+// ver detalles de una publicacion reportada
 router.get('/reportes/publicacion/:id', async (req, res) => {
     try {
         const publicacion = await Publicacion.findByPk(req.params.id, {
@@ -75,7 +75,7 @@ router.get('/reportes/publicacion/:id', async (req, res) => {
     }
 });
 
-// Dar de baja publicación (eliminar)
+// Dar de baja publicacion
 router.post('/reportes/publicacion/:id/eliminar', async (req, res) => {
     try {
         const publicacion = await Publicacion.findByPk(req.params.id);
@@ -86,16 +86,16 @@ router.post('/reportes/publicacion/:id/eliminar', async (req, res) => {
 
         const id_usuario = publicacion.id_usuario;
 
-        // Eliminar publicación (reportes se eliminan por CASCADE)
+        // Eliminar publicacion
         await publicacion.destroy();
 
-        // Actualizar estado de reportes a 'resuelto'
+        // Actualizar estado de reportes a resuelto
         await reporte_publicacion.update(
             { estado: 'resuelto' },
             { where: { id_publicacion: req.params.id } }
         );
 
-        // INCREMENTAR contador de publicaciones eliminadas del usuario
+        // incrementar contador de publicaciones eliminadas del usuario
         const usuario = await Usuario.findByPk(id_usuario);
         if (usuario) {
             const nuevasEliminadas = (usuario.publicaciones_eliminadas || 0) + 1;
@@ -103,7 +103,7 @@ router.post('/reportes/publicacion/:id/eliminar', async (req, res) => {
                 publicaciones_eliminadas: nuevasEliminadas
             });
 
-            // Si llega a 3, inactivar cuenta
+            // si llega a 3, inactivar cuenta
             if (nuevasEliminadas >= 3) {
                 await usuario.update({ activo: false });
                 req.flash('warning', `El usuario ${usuario.username} ha sido INACTIVADO por acumular 3 publicaciones eliminadas`);
@@ -122,7 +122,7 @@ router.post('/reportes/publicacion/:id/eliminar', async (req, res) => {
     }
 });
 
-// Desestimar reportes (marcar como revisado)
+// eesestimar reportes 
 router.post('/reportes/publicacion/:id/desestimar', async (req, res) => {
     try {
         await reporte_publicacion.update(

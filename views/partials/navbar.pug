@@ -13,6 +13,11 @@ nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
                             i.bi.bi-person-circle
                             |  #{session.username}
                     li.nav-item
+                        a.nav-link(href="#" data-bs-toggle="modal" data-bs-target="#modalNotificaciones")
+                            i.bi.bi-bell
+                            if notificacionesNoLeidas > 0
+                                span.badge.bg-danger.ms-1= notificacionesNoLeidas
+                    li.nav-item
                         a.nav-link(href="/publicaciones") Publicaciones
                     li.nav-item
                         a.nav-link(href="/perfil") Mi Perfil

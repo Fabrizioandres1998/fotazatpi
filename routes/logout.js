@@ -1,7 +1,7 @@
 let express = require('express');
 let router = express.Router();
 
-// cerrar sesion (por post, desde un formulario)
+// cerrar sesion 
 router.post("/", (req, res) => {
   req.session.destroy((err) => {
     if (err) {

@@ -15,6 +15,8 @@ module.exports = (sequelize, DataTypes) => {
       });
       Usuario.hasMany(models.reporte_publicacion, { foreignKey: 'id_usuario', as: 'reportes' });
       Usuario.hasMany(models.me_interesa, { foreignKey: 'id_usuario', as: 'intereses' });
+      Usuario.hasMany(models.notificacion, { foreignKey: 'id_usuario_destino', as: 'notificaciones_recibidas' });
+      Usuario.hasMany(models.notificacion, { foreignKey: 'id_usuario_origen', as: 'notificaciones_enviadas' });
       // Usuarios que me SIGUEN (mis seguidores)
       Usuario.belongsToMany(models.Usuario, {
         through: 'follower',
@@ -31,8 +33,8 @@ module.exports = (sequelize, DataTypes) => {
     password_hash: DataTypes.STRING,
     activo: {
       type: DataTypes.BOOLEAN,
-      defaultValue: true, 
-      allowNull: false     
+      defaultValue: true,
+      allowNull: false
     },
     rol: DataTypes.STRING,
     publicaciones_eliminadas: {

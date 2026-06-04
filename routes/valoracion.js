@@ -1,9 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const { Valoracion, Publicacion } = require('../models');
+const { Valoracion, Publicacion, notificacion } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// vvotar una publicacion
+// Funcion para crear notificacion
+async function crearNotificacion(id_usuario_destino, id_usuario_origen, mensaje) {
+    try {
+        await notificacion.create({
+            id_usuario_destino,
+            id_usuario_origen,
+            mensaje,
+            leida: false
+        });
+    } catch (error) {
+        console.error('Error al crear notificación:', error);
+    }
+}
+
+// votar una publicacion
 router.post('/publicacion/:id', authMiddleware, async (req, res) => {
     try {
         const id_publicacion = req.params.id;
@@ -35,6 +49,13 @@ router.post('/publicacion/:id', authMiddleware, async (req, res) => {
             await votoExistente.update({ puntaje });
         } else {
             await Valoracion.create({ id_usuario, id_publicacion, puntaje });
+
+            // NOTIFICACIÓN: cuando alguien vota por primera vez
+            await crearNotificacion(
+                publicacion.id_usuario,
+                id_usuario,
+                ` valoró tu publicación con ${puntaje} estrellas`
+            );
         }
 
         res.redirect('back');

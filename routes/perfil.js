@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const { Publicacion, Imagen, Usuario, Etiqueta, follower } = require('../models');
 
-// Muestra mi perfil (usando la sesion)
+// Muestra mi perfil
 router.get('/', async (req, res, next) => {
     try {
         const { etiqueta } = req.query;

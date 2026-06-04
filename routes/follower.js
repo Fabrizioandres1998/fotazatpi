@@ -1,7 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { Usuario, follower } = require('../models');
+const { Usuario, follower, notificacion } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
+
+// funcion para crear notificacin
+async function crearNotificacion(id_usuario_destino, id_usuario_origen, mensaje) {
+    try {
+        await notificacion.create({
+            id_usuario_destino,
+            id_usuario_origen,
+            mensaje,
+            leida: false
+        });
+    } catch (error) {
+        console.error('Error al crear notificación:', error);
+    }
+}
 
 // Seguir a un usuario
 router.post('/seguir/:id', authMiddleware, async (req, res) => {
@@ -10,13 +24,11 @@ router.post('/seguir/:id', authMiddleware, async (req, res) => {
         const id_seguidor = req.session.id_usuario;
 
         if (parseInt(id_seguidor) === parseInt(id_seguido)) {
-            req.flash('error', 'No puedes seguirte a ti mismo');
             return res.redirect('back');
         }
 
         const usuarioExistente = await Usuario.findByPk(id_seguido);
         if (!usuarioExistente) {
-            req.flash('error', 'Usuario no encontrado');
             return res.redirect('/publicaciones');
         }
 
@@ -28,7 +40,6 @@ router.post('/seguir/:id', authMiddleware, async (req, res) => {
         });
 
         if (yaSigue) {
-            req.flash('error', 'Ya sigues a este usuario');
             return res.redirect(`/perfil/${usuarioExistente.username}`);
         }
 
@@ -37,12 +48,19 @@ router.post('/seguir/:id', authMiddleware, async (req, res) => {
             id_seguido: id_seguido
         });
 
-        req.flash('success', `Ahora sigues a ${usuarioExistente.username}`);
+        // NOTIFICACION cuando alguien te sigue
+        if (id_seguidor !== id_seguido) {
+            await crearNotificacion(
+                id_seguido,
+                id_seguidor,
+                ` comenzó a seguirte`
+            );
+        }
+
         res.redirect(`/perfil/${usuarioExistente.username}`);
 
     } catch (error) {
         console.error('Error al seguir:', error);
-        req.flash('error', 'Error al seguir usuario');
         res.redirect('back');
     }
 });
@@ -54,13 +72,11 @@ router.post('/dejar-seguir/:id', authMiddleware, async (req, res) => {
         const id_seguidor = req.session.id_usuario;
 
         if (parseInt(id_seguidor) === parseInt(id_seguido)) {
-            req.flash('error', 'No puedes dejar de seguirte a ti mismo');
             return res.redirect('back');
         }
 
         const usuarioExistente = await Usuario.findByPk(id_seguido);
         if (!usuarioExistente) {
-            req.flash('error', 'Usuario no encontrado');
             return res.redirect('/publicaciones');
         }
 
@@ -71,12 +87,10 @@ router.post('/dejar-seguir/:id', authMiddleware, async (req, res) => {
             }
         });
 
-        req.flash('success', `Dejaste de seguir a ${usuarioExistente.username}`);
         res.redirect(`/perfil/${usuarioExistente.username}`);
 
     } catch (error) {
         console.error('Error al dejar de seguir:', error);
-        req.flash('error', 'Error al dejar de seguir');
         res.redirect('back');
     }
 });
@@ -93,7 +107,6 @@ router.get('/seguidores/:id', async (req, res) => {
         });
 
         if (!usuario) {
-            req.flash('error', 'Usuario no encontrado');
             return res.redirect('/publicaciones');
         }
 
@@ -121,7 +134,6 @@ router.get('/seguidos/:id', async (req, res) => {
         });
 
         if (!usuario) {
-            req.flash('error', 'Usuario no encontrado');
             return res.redirect('/publicaciones');
         }
 
