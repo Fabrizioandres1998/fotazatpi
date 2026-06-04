@@ -128,7 +128,7 @@ block content
                 .modal-footer
                     button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cerrar
 
-    // Modal de Seguidos
+        // Modal de Seguidos
     .modal.fade(id="seguidosModal" tabindex="-1" aria-labelledby="seguidosModalLabel" aria-hidden="true")
         .modal-dialog
             .modal-content
@@ -149,3 +149,11 @@ block content
                         p.text-muted No sigue a nadie todavia.
                 .modal-footer
                     button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cerrar
+
+    // ALERTA DE PUBLICACIONES ELIMINADAS (dentro del flujo, bien indentada)
+    if publicacionesEliminadas > 0
+        .alert.alert-warning.mt-2
+            strong Atención: 
+            | Has tenido #{publicacionesEliminadas}/3 publicaciones eliminadas.
+            if publicacionesEliminadas >= 3
+                | Tu cuenta está inactiva. Contacta al administrador.

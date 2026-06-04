@@ -29,7 +29,11 @@ module.exports = (sequelize, DataTypes) => {
     email: DataTypes.STRING,
     password_hash: DataTypes.STRING,
     activo: DataTypes.BOOLEAN,
-    rol: DataTypes.STRING
+    rol: DataTypes.STRING,
+    publicaciones_eliminadas: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    }
   }, {
     sequelize,
     modelName: 'Usuario',

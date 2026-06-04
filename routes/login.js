@@ -29,7 +29,11 @@ router.post('/', async (req, res) => {
     if (!passwordValida) {
       return res.send('Contraseña incorrecta');
     }
-
+    
+    if (!usuario.activo) {
+      req.flash('error', 'Tu cuenta ha sido desactivada por acumular reportes');
+      return res.redirect('/login');
+    }
     // guardo los datos en sesion
     req.session.id_usuario = usuario.id;
     req.session.rol = usuario.rol;

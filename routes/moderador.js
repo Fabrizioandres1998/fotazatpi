@@ -84,7 +84,6 @@ router.post('/reportes/publicacion/:id/eliminar', async (req, res) => {
             return res.redirect('/moderador/reportes');
         }
 
-        // Guardar id_usuario para contar después
         const id_usuario = publicacion.id_usuario;
 
         // Eliminar publicación (reportes se eliminan por CASCADE)
@@ -96,13 +95,22 @@ router.post('/reportes/publicacion/:id/eliminar', async (req, res) => {
             { where: { id_publicacion: req.params.id } }
         );
 
-        // Contar publicaciones eliminadas del usuario
-        const publicacionesEliminadas = await Publicacion.count({
-            where: { id_usuario: id_usuario }
-        });
+        // INCREMENTAR contador de publicaciones eliminadas del usuario
+        const usuario = await Usuario.findByPk(id_usuario);
+        if (usuario) {
+            const nuevasEliminadas = (usuario.publicaciones_eliminadas || 0) + 1;
+            await usuario.update({
+                publicaciones_eliminadas: nuevasEliminadas
+            });
 
-        // Las publicaciones eliminadas ya no existen, necesitamos otra forma de contar
-        // Usaremos un campo en usuario o una tabla aparte
+            // Si llega a 3, inactivar cuenta
+            if (nuevasEliminadas >= 3) {
+                await usuario.update({ activo: false });
+                req.flash('warning', `El usuario ${usuario.username} ha sido INACTIVADO por acumular 3 publicaciones eliminadas`);
+            } else {
+                req.flash('info', `El usuario ${usuario.username} tiene ${nuevasEliminadas}/3 publicaciones eliminadas`);
+            }
+        }
 
         req.flash('success', 'Publicación eliminada correctamente');
         res.redirect('/moderador/reportes');
