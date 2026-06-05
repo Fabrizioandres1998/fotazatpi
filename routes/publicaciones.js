@@ -149,12 +149,10 @@ router.post('/:id/comentario', async (req, res) => {
         const id_usuario = req.session.id_usuario;
 
         if (!id_usuario) {
-            req.flash('error', 'Debes iniciar sesión para comentar');
             return res.redirect(`/publicaciones/${id}`);
         }
 
         if (!texto || texto.trim() === '') {
-            req.flash('error', 'El comentario no puede estar vacío');
             return res.redirect(`/publicaciones/${id}`);
         }
 
@@ -169,7 +167,6 @@ router.post('/:id/comentario', async (req, res) => {
 
     } catch (error) {
         console.error('Error al crear comentario:', error);
-        req.flash('error', 'Error al crear comentario');
         res.redirect(`/publicaciones/${req.params.id}`);
     }
 });

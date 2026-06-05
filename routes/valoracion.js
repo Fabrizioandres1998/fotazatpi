@@ -54,7 +54,7 @@ router.post('/publicacion/:id', authMiddleware, async (req, res) => {
             await crearNotificacion(
                 publicacion.id_usuario,
                 id_usuario,
-                ` valoró tu publicación con ${puntaje} estrellas`
+                ` valoró tu publicación con ${puntaje}`
             );
         }
 

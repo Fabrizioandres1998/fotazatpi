@@ -5,15 +5,20 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       notificacion.belongsTo(models.Usuario, { foreignKey: 'id_usuario_destino', as: 'destino' });
       notificacion.belongsTo(models.Usuario, { foreignKey: 'id_usuario_origen', as: 'origen' });
+      notificacion.belongsTo(models.Publicacion, { foreignKey: 'id_publicacion', as: 'publicacion' });
     }
   }
-
+  
   notificacion.init({
     id_usuario_destino: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
     id_usuario_origen: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    id_publicacion: {
       type: DataTypes.INTEGER,
       allowNull: true
     },
@@ -32,6 +37,6 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'notificaciones',
     timestamps: true
   });
-
+  
   return notificacion;
 };

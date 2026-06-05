@@ -1,37 +1,33 @@
 const express = require('express');
 const router = express.Router();
-const { notificacion, Usuario } = require('../models');
+const { notificacion, Usuario, Publicacion } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// vista de notificaciones
-router.get('/', authMiddleware, async (req, res) => {
-    try {
-        const notificaciones = await notificacion.findAll({
-            where: { id_usuario_destino: req.session.id_usuario },
-            include: [{ model: Usuario, as: 'origen', attributes: ['id', 'username'] }],
-            order: [['createdAt', 'DESC']]
-        });
-
-        res.render('notificaciones', { notificaciones });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Error al cargar notificaciones');
-    }
-});
-
-// obtener notificaciones en JSON ppara el modal
 router.get('/listar', authMiddleware, async (req, res) => {
     try {
+        console.log('=== DEBUG NOTIFICACIONES ===');
+        console.log('Usuario ID:', req.session.id_usuario);
+        
         const notificaciones = await notificacion.findAll({
             where: { id_usuario_destino: req.session.id_usuario },
-            include: [{ model: Usuario, as: 'origen', attributes: ['id', 'username'] }],
+            include: [
+                { model: Usuario, as: 'origen', attributes: ['id', 'username'] },
+                { model: Publicacion, as: 'publicacion', attributes: ['id', 'titulo'] }
+            ],
             order: [['createdAt', 'DESC']],
             limit: 30
         });
+        
+        console.log('Notificaciones encontradas:', notificaciones.length);
         res.json(notificaciones);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al cargar notificaciones' });
+        console.error('ERROR COMPLETO:', error);
+        console.error('Mensaje:', error.message);
+        console.error('Stack:', error.stack);
+        res.status(500).json({ 
+            error: error.message,
+            stack: error.stack 
+        });
     }
 });
 
@@ -43,7 +39,8 @@ router.post('/marcar/:id', authMiddleware, async (req, res) => {
         );
         res.json({ success: true });
     } catch (error) {
-        res.status(500).json({ success: false });
+        console.error('Error al marcar:', error);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 

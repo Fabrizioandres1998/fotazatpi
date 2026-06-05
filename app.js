@@ -23,6 +23,7 @@ const reportePublicacionRouter = require('./routes/reportePublicacion');
 const moderadorRouter = require('./routes/moderador');
 const meInteresaRouter = require('./routes/meInteresa');
 const notificacionesRouter = require('./routes/notificaciones');
+const mensajesRouter = require('./routes/mensajes');
 
 // IMPORTACION MIDDLEWARES PROPIOS
 const authMiddleware = require('./middlewares/authMiddleware');
@@ -130,6 +131,7 @@ app.use('/reportes', reportePublicacionRouter);
 app.use('/moderador', moderadorRouter);
 app.use('/me-interesa', meInteresaRouter);
 app.use('/notificaciones', notificacionesRouter);
+app.use('/mensajes', mensajesRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -1,0 +1,24 @@
+extends layout
+
+block content
+    .container.mt-4
+        .row
+            .col-md-8.offset-md-2
+                .card
+                    .card-header
+                        h3 Enviar mensaje a #{destinatario ? destinatario.username : 'usuario'}
+                    .card-body
+                        if publicacion
+                            .alert.alert-info
+                                strong Publicación:
+                                br
+                                | #{publicacion.titulo}
+                        form(action=`/mensajes/enviar/${id_destinatario}`, method="POST")
+                            if publicacion
+                                input(type="hidden" name="id_publicacion", value=publicacion.id)
+                            .mb-3
+                                label.form-label Mensaje
+                                textarea.form-control(name="mensaje" rows="5", required, placeholder="Escribe tu mensaje...")
+                            .d-flex.gap-2
+                                button.btn.btn-primary(type="submit") Enviar
+                                a.btn.btn-secondary(href="javascript:history.back()") Cancelar

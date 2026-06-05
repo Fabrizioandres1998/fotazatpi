@@ -50,17 +50,22 @@ html
                     let html = '<div class="list-group">';
                     notificaciones.forEach(notif => {
                         const clase = notif.leida ? '' : 'list-group-item-warning';
-                        // Dentro del modal, donde se genera el HTML de cada notificación
+                        const esInteres = notif.mensaje && notif.mensaje.includes('quiere adquirir');
+                        const botonRespuesta = esInteres && notif.origen ? `<a href="/mensajes/nuevo/${notif.origen.id}?publicacion=${notif.id_publicacion}" class="btn btn-sm btn-success ms-2">Responder</a>` : '';
+
                         html += `
                             <div class="list-group-item ${clase}" data-id="${notif.id}">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         ${notif.origen ? `<a href="/perfil/${notif.origen.username}" class="text-decoration-none fw-bold">${notif.origen.username}</a>` : '<strong>Sistema</strong>'}
-                                        <span> ${notif.mensaje}</span>
+                                        <span> ${notif.mensaje || ''}</span>
                                         <br>
                                         <small class="text-muted">${new Date(notif.createdAt).toLocaleString()}</small>
                                     </div>
-                                    ${!notif.leida ? `<button class="btn btn-sm btn-outline-secondary marcar-leida" data-id="${notif.id}">Leído</button>` : ''}
+                                    <div>
+                                        ${botonRespuesta}
+                                        ${!notif.leida ? `<button class="btn btn-sm btn-outline-secondary marcar-leida" data-id="${notif.id}">Leído</button>` : ''}
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -91,6 +96,7 @@ html
                         });
                     });
                 } catch (error) {
+                    console.error('Error:', error);
                     contenedor.innerHTML = '<div class="text-center text-danger">Error al cargar notificaciones</div>';
                 }
             });

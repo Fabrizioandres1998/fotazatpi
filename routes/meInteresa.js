@@ -3,12 +3,13 @@ const router = express.Router();
 const { me_interesa, Publicacion, notificacion } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// funcion para crear notificacion
-async function crearNotificacion(id_usuario_destino, id_usuario_origen, mensaje) {
+// funcion para crear notificacion (ahora con id_publicacion)
+async function crearNotificacion(id_usuario_destino, id_usuario_origen, id_publicacion, mensaje) {
     try {
         await notificacion.create({
             id_usuario_destino,
             id_usuario_origen,
+            id_publicacion,
             mensaje,
             leida: false
         });
@@ -46,7 +47,8 @@ router.post('/publicacion/:id', authMiddleware, async (req, res) => {
                 await crearNotificacion(
                     publicacion.id_usuario,
                     id_usuario,
-                    ` le interesa tu publicación "${publicacion.titulo.substring(0, 50)}"`
+                    id_publicacion,  // ← PASAR EL ID DE LA PUBLICACIÓN
+                    `quiere adquirir tu publicación "${publicacion.titulo.substring(0, 50)}"`
                 );
             }
         }
