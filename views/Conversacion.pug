@@ -1,0 +1,33 @@
+extends layout
+
+block content
+    .container.mt-4
+        .card
+            .card-header
+                h3 Conversación con #{otroUsuario.username}
+            .card-body
+                .conversacion-container(style="height: 400px; overflow-y: auto;")
+                    if mensajes && mensajes.length > 0
+                        each msg in mensajes
+                            if msg.remitente.id === session.id_usuario
+                                .d-flex.justify-content-end.mb-3
+                                    .card.bg-primary.text-white(style="max-width: 70%;")
+                                        .card-body.py-2.px-3
+                                            p.card-text.mb-0= msg.mensaje
+                                            small.opacity-75= new Date(msg.createdAt).toLocaleString()
+                            else
+                                .d-flex.justify-content-start.mb-3
+                                    .card.bg-light(style="max-width: 70%;")
+                                        .card-body.py-2.px-3
+                                            strong #{msg.remitente.username}
+                                            p.card-text.mb-0= msg.mensaje
+                                            small.text-muted= new Date(msg.createdAt).toLocaleString()
+                    else
+                        .text-center.text-muted
+                            p No hay mensajes aún
+            .card-footer
+                form(action=`/mensajes/enviar/${otroUsuario.id}`, method="POST")
+                    .input-group
+                        input(type="hidden" name="id_publicacion")
+                        input.form-control(type="text" name="mensaje" placeholder="Escribe tu mensaje...", required)
+                        button.btn.btn-primary(type="submit") Enviar

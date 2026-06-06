@@ -51,7 +51,9 @@ html
                     notificaciones.forEach(notif => {
                         const clase = notif.leida ? '' : 'list-group-item-warning';
                         const esInteres = notif.mensaje && notif.mensaje.includes('quiere adquirir');
-                        const botonRespuesta = esInteres && notif.origen ? `<a href="/mensajes/nuevo/${notif.origen.id}?publicacion=${notif.id_publicacion}" class="btn btn-sm btn-success ms-2">Responder</a>` : '';
+                        const esMensaje = notif.mensaje && notif.mensaje.includes('te envió un mensaje');
+                      const botonRespuesta = esInteres && notif.origen ? `<a href="/mensajes/ver/${notif.origen.id}" class="btn btn-sm btn-success ms-2">Responder</a>` : '';
+                        const botonVerMensaje = esMensaje && notif.origen ? `<a href="/mensajes/ver/${notif.origen.id}" class="btn btn-sm btn-info ms-2">Ver mensaje</a>` : '';
 
                         html += `
                             <div class="list-group-item ${clase}" data-id="${notif.id}">
@@ -64,6 +66,7 @@ html
                                     </div>
                                     <div>
                                         ${botonRespuesta}
+                                        ${botonVerMensaje}
                                         ${!notif.leida ? `<button class="btn btn-sm btn-outline-secondary marcar-leida" data-id="${notif.id}">Leído</button>` : ''}
                                     </div>
                                 </div>

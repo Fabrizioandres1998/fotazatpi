@@ -13,30 +13,26 @@ router.post('/publicacion/:id', authMiddleware, async (req, res) => {
         // Validar motivo
         const motivosValidos = ['spam', 'contenido_inapropiado', 'violencia', 'odio', 'copyright'];
         if (!motivo || !motivosValidos.includes(motivo)) {
-            req.flash('error', 'Motivo inválido');
             return res.redirect('back');
         }
 
         // Verificar que la publicacion existe
         const publicacion = await Publicacion.findByPk(id_publicacion);
         if (!publicacion) {
-            req.flash('error', 'Publicación no encontrada');
             return res.redirect('back');
         }
 
         // No reportar propia publicacion
         if (publicacion.id_usuario === id_usuario) {
-            req.flash('error', 'No puedes reportar tu propia publicación');
             return res.redirect('back');
         }
 
-        // Verificar si ya report
+        // Verificar si ya reportó
         const reporteExistente = await reporte_publicacion.findOne({
             where: { id_usuario, id_publicacion }
         });
 
         if (reporteExistente) {
-            req.flash('error', 'Ya reportaste esta publicación anteriormente');
             return res.redirect('back');
         }
 
@@ -54,17 +50,10 @@ router.post('/publicacion/:id', authMiddleware, async (req, res) => {
             where: { id_publicacion }
         });
 
-        if (cantidadReportes >= 3) {
-            req.flash('warning', `Esta publicación tiene ${cantidadReportes} reportes. Un moderador la revisará.`);
-        } else {
-            req.flash('success', `Reporte enviado (${cantidadReportes}/3 reportes). Gracias por ayudar.`);
-        }
-
         res.redirect(`/publicaciones/${id_publicacion}`);
 
     } catch (error) {
         console.error('Error al reportar:', error);
-        req.flash('error', 'Error al enviar el reporte');
         res.redirect('back');
     }
 });

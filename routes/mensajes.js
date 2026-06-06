@@ -73,4 +73,34 @@ router.post('/enviar/:id_destinatario', authMiddleware, async (req, res) => {
     }
 });
 
+// Ver conversación con un usuario (desde notificación "te envió un mensaje")
+router.get('/ver/:id_usuario', authMiddleware, async (req, res) => {
+    try {
+        const { Op } = require('sequelize');
+        const id_usuario_actual = req.session.id_usuario;
+        const id_otro_usuario = req.params.id_usuario;
+
+        const otroUsuario = await Usuario.findByPk(id_otro_usuario, {
+            attributes: ['id', 'username']
+        });
+
+        const mensajes = await mensaje.findAll({
+            where: {
+                [Op.or]: [
+                    { id_remitente: id_usuario_actual, id_destinatario: id_otro_usuario },
+                    { id_remitente: id_otro_usuario, id_destinatario: id_usuario_actual }
+                ]
+            },
+            include: [
+                { model: Usuario, as: 'remitente', attributes: ['id', 'username'] }
+            ],
+            order: [['createdAt', 'ASC']]
+        });
+
+        res.render('conversacion', { mensajes, otroUsuario });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error al cargar conversación: ' + error.message);
+    }
+});
 module.exports = router;
