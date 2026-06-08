@@ -4,7 +4,7 @@ const { reporte_publicacion, Publicacion } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 // Enviar reporte
-router.post('/publicacion/:id', authMiddleware, async (req, res) => {
+router.post('/:id', authMiddleware, async (req, res) => {
     try {
         const id_publicacion = req.params.id;
         const id_usuario = req.session.id_usuario;

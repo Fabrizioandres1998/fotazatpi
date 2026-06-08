@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { Publicacion, Imagen, Usuario, Etiqueta, comentario, Valoracion, reporte_publicacion, me_interesa } = require('../models');
+const { Publicacion, Imagen, Usuario, Etiqueta, comentario, Valoracion, reporte_publicacion, me_interesa, reporte_comentario } = require('../models');
 const { sequelize } = require('../models');
+const authMiddleware = require('../middlewares/authMiddleware');
 
 // listar todas o filtrar por etiqueta
 router.get('/', async (req, res) => {
@@ -73,10 +74,17 @@ router.get('/:id', async (req, res) => {
             return res.status(404).send("Publicación no encontrada");
         }
 
-        // traer comentarios con los datos del usuario
+        // traer comentarios con los datos del usuario y sus reportes
         const comentarios = await comentario.findAll({
             where: { id_publicacion: req.params.id },
-            include: [{ model: Usuario }],
+            include: [
+                { model: Usuario, as: 'usuario' },  
+                {
+                    model: reporte_comentario,
+                    as: 'reportes',
+                    required: false
+                }
+            ],
             order: [['createdAt', 'ASC']]
         });
 
@@ -168,6 +176,30 @@ router.post('/:id/comentario', async (req, res) => {
     } catch (error) {
         console.error('Error al crear comentario:', error);
         res.redirect(`/publicaciones/${req.params.id}`);
+    }
+});
+
+// eliminar comentario (para el dueño de la publi)
+router.post('/eliminar/:id', authMiddleware, async (req, res) => {
+    try {
+        const comentarioItem = await comentario.findByPk(req.params.id, {
+            include: [{ model: Publicacion, as: 'publicacion' }]
+        });
+
+        if (!comentarioItem) {
+            return res.redirect('back');
+        }
+
+        // solo el dueño de la publi puede eliminar 
+        if (comentarioItem.publicacion.id_usuario !== req.session.id_usuario) {
+            return res.redirect('back');
+        }
+
+        await comentarioItem.destroy();
+        res.redirect('back');
+    } catch (error) {
+        console.error('Error al eliminar comentario:', error);
+        res.redirect('back');
     }
 });
 

@@ -52,7 +52,7 @@ html
                         const clase = notif.leida ? '' : 'list-group-item-warning';
                         const esInteres = notif.mensaje && notif.mensaje.includes('quiere adquirir');
                         const esMensaje = notif.mensaje && notif.mensaje.includes('te envió un mensaje');
-                      const botonRespuesta = esInteres && notif.origen ? `<a href="/mensajes/ver/${notif.origen.id}" class="btn btn-sm btn-success ms-2">Responder</a>` : '';
+                        const botonRespuesta = esInteres && notif.origen ? `<a href="/mensajes/ver/${notif.origen.id}" class="btn btn-sm btn-success ms-2">Responder</a>` : '';
                         const botonVerMensaje = esMensaje && notif.origen ? `<a href="/mensajes/ver/${notif.origen.id}" class="btn btn-sm btn-info ms-2">Ver mensaje</a>` : '';
 
                         html += `
@@ -60,7 +60,7 @@ html
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         ${notif.origen ? `<a href="/perfil/${notif.origen.username}" class="text-decoration-none fw-bold">${notif.origen.username}</a>` : '<strong>Sistema</strong>'}
-                                        <span> ${notif.mensaje || ''}</span>
+                                        ${notif.link ? `<a href="${notif.link}" class="text-decoration-none"> ${notif.mensaje}</a>` : `<span> ${notif.mensaje}</span>`}
                                         <br>
                                         <small class="text-muted">${new Date(notif.createdAt).toLocaleString()}</small>
                                     </div>
@@ -76,7 +76,7 @@ html
                     html += '</div>';
                     contenedor.innerHTML = html;
 
-                    // Marcar como leídas
+                    // Marcar como leidas
                     document.querySelectorAll('.marcar-leida').forEach(btn => {
                         btn.addEventListener('click', async function(e) {
                             e.stopPropagation();
@@ -86,7 +86,6 @@ html
                             item.classList.remove('list-group-item-warning');
                             this.remove();
 
-                            // Actualizar badge
                             const badge = document.querySelector('.bi-bell + .badge');
                             if (badge) {
                                 const newCount = parseInt(badge.textContent) - 1;

@@ -15,10 +15,10 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'id_etiqueta',
         as: 'etiquetas'
       });
-      Publicacion.hasMany(models.comentario, { foreignKey: 'id_publicacion' });
       Publicacion.hasMany(models.reporte_publicacion, { foreignKey: 'id_publicacion', as: 'reportes' });
       Publicacion.hasMany(models.me_interesa, { foreignKey: 'id_publicacion', as: 'interesados' });
       Publicacion.hasMany(models.notificacion, { foreignKey: 'id_publicacion', as: 'notificaciones' });
+      Publicacion.hasMany(models.comentario, { foreignKey: 'id_publicacion', as: 'comentarios' });
     }
   }
 

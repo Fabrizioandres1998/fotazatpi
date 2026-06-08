@@ -1,87 +1,17 @@
 extends layout
 
 block content
-
     .container.mt-4
-
         a.btn.btn-secondary.mb-3(href="/publicaciones") Volver
 
         if publicacion
-            // DATOS DE LA PUBLICACION
-            h1.mb-4= publicacion.titulo
+            // TITULO
+            h1.mb-4.text-center= publicacion.titulo
 
-            .row
-                .col-md-7
-                    .card
-                        .card-body
-                            p.card-text= publicacion.descripcion
-
-                    if publicacion.Usuario
-                        p.mt-2
-                            strong Autor: 
-                            a(href=`/perfil/${publicacion.Usuario.username}`) #{publicacion.Usuario.username}
-
-                    if publicacion.etiquetas && publicacion.etiquetas.length
-                        p
-                            strong Etiquetas: 
-                            each etiq in publicacion.etiquetas
-                                a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
-
-                    // SECCION DE VALORACION
-                    if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
-                        .card.mt-3.mb-3
-                            .card-header
-                                strong Valorar publicación
-                            .card-body
-                                form(action=`/valoracion/publicacion/${publicacion.id}`, method="POST" class="d-flex align-items-center gap-3")
-                                    label.me-2 Puntuacion:
-                                    input(type="range" name="puntaje" min="1" max="5" step="1", value=votoUsuario || 3, oninput="this.nextElementSibling.value = this.value")
-                                    output #{votoUsuario || 3}
-                                    button.btn.btn-primary(type="submit") 
-                                        if votoUsuario
-                                            | Actualizar voto
-                                        else
-                                            | Votar
-
-                    // Mostrar promedio de votos
-                    if cantidadVotos > 0
-                        .alert.alert-info.mt-2
-                            strong Promedio: 
-                            | #{promedio.toFixed(1)} / 5.0
-                            |  (#{cantidadVotos} voto#{cantidadVotos !== 1 ? 's' : ''})
-                    else
-                        .alert.alert-secondary.mt-2
-                            | Sin valoraciones aún. ¡Sé el primero!
-
-                    if cantidadReportes > 0
-                        .mt-2
-                            small.text-muted 
-                                | Reportes: #{cantidadReportes}/3
-
-                    // BOTON DE REPORTE (abre modal)
-                    if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
-                        .mt-3
-                            button.btn.btn-outline-danger.btn-sm(type="button" data-bs-toggle="modal" data-bs-target="#modalReporte")
-                                i.bi.bi-flag
-                                |  Reportar publicación
-
-                    // BOTÓN ME INTERESA
-                    if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
-                        .mt-3
-                            form(action=`/me-interesa/publicacion/${publicacion.id}`, method="POST", class="d-inline")
-                                if yaInteresado
-                                    button.btn.btn-outline-secondary.btn-sm(type="submit")
-                                        i.bi.bi-hand-thumbs-down
-                                        |  No me interesa
-                                else
-                                    button.btn.btn-outline-success.btn-sm(type="submit")
-                                        i.bi.bi-hand-thumbs-up
-                                        |  Me interesa
-                            span.ms-2.text-muted(id=`interesados-${publicacion.id}`) 
-                                | #{interesadosCount || 0} interesados
-
-                .col-md-5
-                    if publicacion.imagenes && publicacion.imagenes.length
+            // CARRUSEL CENTRADO (80% del ancho)
+            if publicacion.imagenes && publicacion.imagenes.length
+                .d-flex.justify-content-center
+                    div(style="width: 80%;")
                         #carouselImagenes.carousel.slide(data-bs-ride="carousel")
                             .carousel-indicators
                                 each img, idx in publicacion.imagenes
@@ -91,7 +21,7 @@ block content
                                 each img, idx in publicacion.imagenes
                                     .carousel-item(class=idx === 0 ? "active" : "")
                                         .position-relative
-                                            img.d-block.w-100.rounded(src=img.url style="height: 300px; object-fit: cover;")
+                                            img.d-block.w-100.rounded(src=img.url style="height: 400px; object-fit: cover;")
                                             if img.licencia === 'copyright' && img.marca_agua
                                                 div(style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;") #{img.marca_agua}
 
@@ -100,11 +30,80 @@ block content
                             button.carousel-control-next(type="button" data-bs-target="#carouselImagenes" data-bs-slide="next")
                                 span.carousel-control-next-icon
 
-                        if publicacion.imagenes[0]
-                            p.mt-2.text-muted Licencia: #{publicacion.imagenes[0].licencia}
-                    else
-                        .alert.alert-info
-                            p No hay imagenes para esta publicacion
+                if publicacion.imagenes[0]
+                    p.mt-2.text-center.text-muted Licencia: #{publicacion.imagenes[0].licencia}
+            else
+                .alert.alert-info.mb-4
+                    p No hay imagenes para esta publicacion
+
+            // DESCRIPCIÓN Y DEMÁS
+            .card.mt-4
+                .card-body
+                    p.card-text= publicacion.descripcion
+
+            if publicacion.Usuario
+                p.mt-2
+                    strong Autor: 
+                    a(href=`/perfil/${publicacion.Usuario.username}`) #{publicacion.Usuario.username}
+
+            if publicacion.etiquetas && publicacion.etiquetas.length
+                p
+                    strong Etiquetas: 
+                    each etiq in publicacion.etiquetas
+                        a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
+
+            // SECCION DE VALORACION
+            if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
+                .card.mt-3.mb-3
+                    .card-header
+                        strong Valorar publicación
+                    .card-body
+                        form(action=`/valoracion/publicacion/${publicacion.id}`, method="POST" class="d-flex align-items-center gap-3")
+                            label.me-2 Puntuacion:
+                            input(type="range" name="puntaje" min="1" max="5" step="1", value=votoUsuario || 3, oninput="this.nextElementSibling.value = this.value")
+                            output #{votoUsuario || 3}
+                            button.btn.btn-primary(type="submit") 
+                                if votoUsuario
+                                    | Actualizar voto
+                                else
+                                    | Votar
+
+            // Mostrar promedio de votos
+            if cantidadVotos > 0
+                .alert.alert-info.mt-2
+                    strong Promedio: 
+                    | #{promedio.toFixed(1)} / 5.0
+                    |  (#{cantidadVotos} voto#{cantidadVotos !== 1 ? 's' : ''})
+            else
+                .alert.alert-secondary.mt-2
+                    | Sin valoraciones aún. ¡Sé el primero!
+
+            if cantidadReportes > 0
+                .mt-2
+                    small.text-muted 
+                        | Reportes: #{cantidadReportes}/3
+
+            // BOTON DE REPORTE PUBLICACION
+            if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
+                .mt-3
+                    button.btn.btn-outline-danger.btn-sm(type="button" data-bs-toggle="modal" data-bs-target="#modalReporte")
+                        i.bi.bi-flag
+                        |  Reportar publicación
+
+            // BOTÓN ME INTERESA
+            if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
+                .mt-3
+                    form(action=`/me-interesa/publicacion/${publicacion.id}`, method="POST" class="d-inline")
+                        if yaInteresado
+                            button.btn.btn-outline-secondary.btn-sm(type="submit")
+                                i.bi.bi-hand-thumbs-down
+                                |  No me interesa
+                        else
+                            button.btn.btn-outline-success.btn-sm(type="submit")
+                                i.bi.bi-hand-thumbs-up
+                                |  Me interesa
+                    span.ms-2.text-muted(id=`interesados-${publicacion.id}`) 
+                        | #{interesadosCount || 0} interesados
 
             // SECCION DE COMENTARIOS
             .row.mt-5
@@ -116,10 +115,22 @@ block content
                         each comentario in comentarios
                             .card.mb-2
                                 .card-body
-                                    a(href=`/perfil/${comentario.Usuario.username}`) 
-                                        strong #{comentario.Usuario ? comentario.Usuario.username : 'Usuario desconocido'}
-                                    p.card-text.mt-2= comentario.texto
-                                    small.text-muted= comentario.createdAt
+                                    .d-flex.justify-content-between.align-items-start
+                                        div
+                                            a(href=`/perfil/${comentario.usuario.username}`) 
+                                                strong #{comentario.usuario ? comentario.usuario.username : 'Usuario desconocido'}
+                                            p.card-text.mt-2= comentario.texto
+                                            small.text-muted= comentario.createdAt
+                                        div
+                                            if session && session.id_usuario && comentario.id_usuario !== session.id_usuario
+                                                button.btn.btn-sm.btn-outline-danger(type="button" data-bs-toggle="modal" data-bs-target="#modalReporteComentario" data-id=comentario.id)
+                                                    i.bi.bi-flag
+                                                    |  Reportar
+                                            if session && session.id_usuario && publicacion.id_usuario === session.id_usuario && comentario.reportes && comentario.reportes.length > 0
+                                                form(action=`/publicaciones/eliminar/${comentario.id}`, method="POST" class="d-inline ms-2" onsubmit="return confirm('¿Eliminar este comentario?')")
+                                                    button.btn.btn-sm.btn-danger(type="submit")
+                                                        i.bi.bi-trash
+                                                        |  Eliminar (#{comentario.reportes.length} reportes)
                     else
                         .alert.alert-secondary
                             p.mb-0 No hay comentarios aún. ¡Sé el primero en comentar!
@@ -139,7 +150,7 @@ block content
                                 a(href="/login") Inicia sesión
                                 |  para comentar
 
-            // MODAL DE REPORTE (dentro del if publicacion)
+            // MODAL DE REPORTE PUBLICACION (dentro del if publicacion)
             if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
                 .modal.fade(id="modalReporte" tabindex="-1")
                     .modal-dialog
@@ -158,14 +169,52 @@ block content
                                             option(value="violencia") Violencia
                                             option(value="odio") Discurso de odio
                                             option(value="copyright") Violación de copyright
-
                                     .mb-3
                                         label.form-label(for="descripcion") Descripción (opcional)
                                         textarea.form-control(name="descripcion" id="descripcion" rows="3" placeholder="Explica con más detalles...")
+                                    .modal-footer
+                                        button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancelar
+                                        button.btn.btn-danger(type="submit") Enviar reporte
 
+            // MODAL DE REPORTE COMENTARIO (dentro del if publicacion)
+            if session && session.id_usuario
+                .modal.fade(id="modalReporteComentario" tabindex="-1")
+                    .modal-dialog
+                        .modal-content
+                            .modal-header
+                                h5.modal-title Reportar comentario
+                                button.btn-close(type="button" data-bs-dismiss="modal")
+                            .modal-body
+                                form(id="formReporteComentario" method="POST")
+                                    .mb-3
+                                        label.form-label(for="motivo_comentario") Motivo *
+                                        select.form-select(name="motivo" id="motivo_comentario", required)
+                                            option(value="") Seleccione un motivo
+                                            option(value="spam") Spam o publicidad
+                                            option(value="contenido_inapropiado") Contenido inapropiado
+                                            option(value="violencia") Violencia
+                                            option(value="odio") Discurso de odio
+                                            option(value="copyright") Violación de copyright
+                                    .mb-3
+                                        label.form-label(for="descripcion_comentario") Descripción (opcional)
+                                        textarea.form-control(name="descripcion" id="descripcion_comentario" rows="3" placeholder="Explica con más detalles...")
                                     .modal-footer
                                         button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancelar
                                         button.btn.btn-danger(type="submit") Enviar reporte
         else
             .alert.alert-danger
                 p Publicación no encontrada
+
+    script.
+        // Reportar comentario
+        const modalReporteComentario = document.getElementById('modalReporteComentario');
+        if (modalReporteComentario) {
+            modalReporteComentario.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const comentarioId = button.getAttribute('data-id');
+                console.log('Modal abierto, comentario ID:', comentarioId);
+                const form = document.getElementById('formReporteComentario');
+                form.action = `/reportes/comentario/${comentarioId}`;
+                console.log('Form action actualizado a:', form.action);
+            });
+        }
