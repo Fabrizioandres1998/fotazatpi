@@ -19,6 +19,12 @@ module.exports = (sequelize, DataTypes) => {
       Publicacion.hasMany(models.me_interesa, { foreignKey: 'id_publicacion', as: 'interesados' });
       Publicacion.hasMany(models.notificacion, { foreignKey: 'id_publicacion', as: 'notificaciones' });
       Publicacion.hasMany(models.comentario, { foreignKey: 'id_publicacion', as: 'comentarios' });
+      Publicacion.belongsToMany(models.coleccion, {
+        through: 'coleccion_publicacion',
+        foreignKey: 'id_publicacion',
+        otherKey: 'id_coleccion',
+        as: 'colecciones'
+      });
     }
   }
 

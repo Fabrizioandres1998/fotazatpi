@@ -20,12 +20,12 @@ nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
                     li.nav-item
                         a.nav-link(href="/publicaciones") Publicaciones
                     li.nav-item
+                        a.nav-link(href="/colecciones") Mis colecciones
+                    li.nav-item
                         a.nav-link(href="/perfil") Mi Perfil
                     if session.rol === 'moderador'
                         li.nav-item
-                            a.nav-link(href="/moderador/reportes" class="moderador-link")
-                                i.bi.bi-shield-shaded
-                                |  Panel Moderador
+                            a.nav-link(href="/moderador/reportes" class="moderador-link") Panel Moderador
                     li.nav-item
                         form(action="/logout" method="POST")
                             button.btn.btn-link.nav-link(type="submit") Cerrar sesión

@@ -105,6 +105,25 @@ block content
                     span.ms-2.text-muted(id=`interesados-${publicacion.id}`) 
                         | #{interesadosCount || 0} interesados
 
+            // BOTÓN GUARDAR EN COLECCIÓN
+            if session && session.id_usuario && misColecciones
+                .mt-3
+                    .dropdown
+                        button.btn.btn-outline-info.btn-sm.dropdown-toggle(type="button" data-bs-toggle="dropdown")
+                            i.bi.bi-bookmark-plus
+                            |  Guardar en colección
+                        ul.dropdown-menu
+                            each coleccionItem in misColecciones
+                                li
+                                    form(action=`/colecciones/${coleccionItem.id}/agregar/${publicacion.id}`, method="POST")
+                                        button.dropdown-item(type="submit") #{coleccionItem.nombre}
+                            li
+                                hr.dropdown-divider
+                            li
+                                a.dropdown-item(href="/colecciones/crear")
+                                    i.bi.bi-plus-circle
+                                    |  Crear nueva colección
+
             // SECCION DE COMENTARIOS
             .row.mt-5
                 .col-12

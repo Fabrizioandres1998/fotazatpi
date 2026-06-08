@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Publicacion, Imagen, Usuario, Etiqueta, comentario, Valoracion, reporte_publicacion, me_interesa, reporte_comentario } = require('../models');
+const { Publicacion, Imagen, Usuario, Etiqueta, comentario, Valoracion, reporte_publicacion, me_interesa, reporte_comentario, coleccion } = require('../models');
 const { sequelize } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
 
@@ -78,7 +78,7 @@ router.get('/:id', async (req, res) => {
         const comentarios = await comentario.findAll({
             where: { id_publicacion: req.params.id },
             include: [
-                { model: Usuario, as: 'usuario' },  
+                { model: Usuario, as: 'usuario' },
                 {
                     model: reporte_comentario,
                     as: 'reportes',
@@ -133,6 +133,16 @@ router.get('/:id', async (req, res) => {
             yaInteresado = !!interes;
         }
 
+        // traer colecciones del usuario
+        let misColecciones = [];
+        if (req.session.id_usuario) {
+            misColecciones = await coleccion.findAll({  
+                where: { id_usuario: req.session.id_usuario },
+                attributes: ['id', 'nombre'],
+                order: [['nombre', 'ASC']]
+            });
+        }
+
         res.render('publicacion', {
             publicacion,
             comentarios,
@@ -141,7 +151,8 @@ router.get('/:id', async (req, res) => {
             votoUsuario: votoUsuario ? votoUsuario.puntaje : null,
             cantidadReportes,
             interesadosCount,
-            yaInteresado
+            yaInteresado,
+            misColecciones
         });
     } catch (error) {
         console.error(error);

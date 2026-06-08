@@ -1,0 +1,32 @@
+extends ../layout
+
+block content
+    .container.mt-4
+        .d-flex.justify-content-between.align-items-center.mb-4
+            h1 Mis colecciones
+            a.btn.btn-primary(href="/colecciones/crear")
+                i.bi.bi-plus-circle
+                |  Nueva colección
+
+        if colecciones && colecciones.length > 0
+            .row
+                each coleccion in colecciones
+                    .col-md-4.mb-4
+                        .card.h-100
+                            .card-body
+                                h5.card-title= coleccion.nombre
+                                p.card-text
+                                    | #{coleccion.publicaciones.length} publicaciones
+                                .mt-2
+                                    each pub in coleccion.publicaciones
+                                        if pub.imagenes && pub.imagenes[0]
+                                            img.img-thumbnail.me-1(src=pub.imagenes[0].url style="width: 50px; height: 50px; object-fit: cover;")
+                                        else
+                                            .bg-secondary.me-1(style="width: 50px; height: 50px; display: inline-block;")
+                                a.btn.btn-sm.btn-outline-primary.me-2(href=`/colecciones/${coleccion.id}`) Ver
+                                form.d-inline(action=`/colecciones/eliminar/${coleccion.id}`, method="POST", onsubmit="return confirm('¿Eliminar esta colección?')")
+                                    button.btn.btn-sm.btn-outline-danger(type="submit") Eliminar
+        else
+            .alert.alert-info
+                p No tienes colecciones aún.
+                a.btn.btn-primary.mt-2(href="/colecciones/crear") Crear mi primera colección

@@ -25,6 +25,7 @@ const meInteresaRouter = require('./routes/meInteresa');
 const notificacionesRouter = require('./routes/notificaciones');
 const mensajesRouter = require('./routes/mensajes');
 const reporteComentarioRouter = require('./routes/reporteComentario');
+const coleccionesRouter = require('./routes/colecciones');
 
 // IMPORTACION MIDDLEWARES PROPIOS
 const authMiddleware = require('./middlewares/authMiddleware');
@@ -124,6 +125,7 @@ app.use('/registro', noAuthMiddleware, registroRouter);
 app.use('/logout', logoutRouter);
 app.use('/perfil', authMiddleware, perfilRouter);
 app.use('/publicaciones', authMiddleware, crearPublicacionRouter);
+app.use('/colecciones', coleccionesRouter);  // ← MOVER ANTES
 app.use('/publicaciones', publicacionesRouter);
 app.use('/', publicacionesRouter);
 app.use('/follower', followerRouter);

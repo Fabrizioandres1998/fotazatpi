@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       Usuario.hasMany(models.Publicacion, { foreignKey: "id_usuario" });
       Usuario.hasMany(models.comentario, { foreignKey: 'id_usuario' });
       Usuario.hasMany(models.Valoracion, { foreignKey: 'id_usuario', as: 'valoraciones' });
-      // usuarios que SIGO (mis seguidos)
+      // usuarios que sigo
       Usuario.belongsToMany(models.Usuario, {
         through: 'follower',
         as: 'seguidos',
@@ -17,7 +17,8 @@ module.exports = (sequelize, DataTypes) => {
       Usuario.hasMany(models.me_interesa, { foreignKey: 'id_usuario', as: 'intereses' });
       Usuario.hasMany(models.notificacion, { foreignKey: 'id_usuario_destino', as: 'notificaciones_recibidas' });
       Usuario.hasMany(models.notificacion, { foreignKey: 'id_usuario_origen', as: 'notificaciones_enviadas' });
-      // Usuarios que me SIGUEN (mis seguidores)
+      Usuario.hasMany(models.coleccion, { foreignKey: 'id_usuario', as: 'colecciones' });
+      // Usuarios que me siguen
       Usuario.belongsToMany(models.Usuario, {
         through: 'follower',
         as: 'seguidores',
