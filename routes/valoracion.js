@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Valoracion, Publicacion, notificacion } = require('../models');
+const { sequelize } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 // Funcion para crear notificacion
@@ -17,30 +18,26 @@ async function crearNotificacion(id_usuario_destino, id_usuario_origen, mensaje)
     }
 }
 
-// votar una publicacion
+// votar una publicacion (ajax)
 router.post('/publicacion/:id', authMiddleware, async (req, res) => {
     try {
         const id_publicacion = req.params.id;
         const id_usuario = req.session.id_usuario;
         const { puntaje } = req.body;
 
-        // Validar puntaje
         if (!puntaje || puntaje < 1 || puntaje > 5) {
-            return res.redirect('back');
+            return res.status(400).json({ error: 'puntaje invalido' });
         }
 
-        // verificar que la publicacion existe
         const publicacion = await Publicacion.findByPk(id_publicacion);
         if (!publicacion) {
-            return res.redirect('back');
+            return res.status(404).json({ error: 'publicacion no encontrada' });
         }
 
-        // autor no puede votar su propia publicacion
         if (publicacion.id_usuario === id_usuario) {
-            return res.redirect('back');
+            return res.status(400).json({ error: 'no puedes votar tu propia publicacion' });
         }
 
-        // buscar si ya voto
         const votoExistente = await Valoracion.findOne({
             where: { id_usuario, id_publicacion }
         });
@@ -49,20 +46,34 @@ router.post('/publicacion/:id', authMiddleware, async (req, res) => {
             await votoExistente.update({ puntaje });
         } else {
             await Valoracion.create({ id_usuario, id_publicacion, puntaje });
-
-            // NOTIFICACIÓN: cuando alguien vota por primera vez
+            
             await crearNotificacion(
                 publicacion.id_usuario,
                 id_usuario,
-                ` valoró tu publicación con ${puntaje}`
+                `valoró tu publicación con ${puntaje}`
             );
         }
 
-        res.redirect('back');
+        const stats = await Valoracion.findAll({
+            where: { id_publicacion },
+            attributes: [
+                [sequelize.fn('AVG', sequelize.col('puntaje')), 'promedio'],
+                [sequelize.fn('COUNT', sequelize.col('id')), 'cantidad']
+            ]
+        });
+
+        const promedio = parseFloat(stats[0]?.dataValues?.promedio || 0);
+        const cantidad = parseInt(stats[0]?.dataValues?.cantidad || 0);
+
+        res.json({
+            success: true,
+            promedio: promedio,
+            cantidad: cantidad
+        });
 
     } catch (error) {
         console.error('Error al votar:', error);
-        res.redirect('back');
+        res.status(500).json({ error: 'error al procesar el voto' });
     }
 });
 

@@ -3,7 +3,7 @@ const router = express.Router();
 const { reporte_publicacion, Publicacion } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// Enviar reporte
+// Enviar reporte 
 router.post('/:id', authMiddleware, async (req, res) => {
     try {
         const id_publicacion = req.params.id;
@@ -13,27 +13,27 @@ router.post('/:id', authMiddleware, async (req, res) => {
         // Validar motivo
         const motivosValidos = ['spam', 'contenido_inapropiado', 'violencia', 'odio', 'copyright'];
         if (!motivo || !motivosValidos.includes(motivo)) {
-            return res.redirect('back');
+            return res.status(400).json({ error: 'Motivo invalido' });
         }
 
         // Verificar que la publicacion existe
         const publicacion = await Publicacion.findByPk(id_publicacion);
         if (!publicacion) {
-            return res.redirect('back');
+            return res.status(404).json({ error: 'Publicacion no encontrada' });
         }
 
         // No reportar propia publicacion
         if (publicacion.id_usuario === id_usuario) {
-            return res.redirect('back');
+            return res.status(400).json({ error: 'No puedes reportar tu propia publicacion' });
         }
 
-        // Verificar si ya reportó
+        // Verificar si ya reporto
         const reporteExistente = await reporte_publicacion.findOne({
             where: { id_usuario, id_publicacion }
         });
 
         if (reporteExistente) {
-            return res.redirect('back');
+            return res.status(400).json({ error: 'ya reportaste esta publicacion' });
         }
 
         // crear reporte
@@ -45,16 +45,19 @@ router.post('/:id', authMiddleware, async (req, res) => {
             estado: 'pendiente'
         });
 
-        // Contar reportes de esta publicacion
+        // contar reportes de esta publicacion
         const cantidadReportes = await reporte_publicacion.count({
             where: { id_publicacion }
         });
 
-        res.redirect(`/publicaciones/${id_publicacion}`);
+        res.json({
+            success: true,
+            cantidadReportes
+        });
 
     } catch (error) {
         console.error('Error al reportar:', error);
-        res.redirect('back');
+        res.status(500).json({ error: 'Error al crear reporte' });
     }
 });
 

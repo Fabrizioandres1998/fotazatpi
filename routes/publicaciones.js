@@ -267,18 +267,20 @@ router.post('/eliminar/:id', authMiddleware, async (req, res) => {
         });
 
         if (!comentarioItem) {
-            return res.redirect('back');
+            return res.status(404).json({ error: 'Comentario no encontrado' });
         }
 
         if (comentarioItem.publicacion.id_usuario !== req.session.id_usuario) {
-            return res.redirect('back');
+            return res.status(403).json({ error: 'No autorizado' });
         }
 
         await comentarioItem.destroy();
-        res.redirect('back');
+
+        res.json({ success: true });
+
     } catch (error) {
         console.error('Error al eliminar comentario:', error);
-        res.redirect('back');
+        res.status(500).json({ error: 'Error al eliminar comentario' });
     }
 });
 

@@ -12,13 +12,12 @@ async function crearNotificacion(id_usuario_destino, id_usuario_origen, mensaje,
             link,
             leida: false
         });
-        console.log('Notificación creada');
     } catch (error) {
         console.error('Error al crear notificación:', error);
     }
 }
 
-// reportar comentario
+// reportar comentario 
 router.post('/:id', authMiddleware, async (req, res) => {
     try {
         const id_comentario = req.params.id;
@@ -27,7 +26,7 @@ router.post('/:id', authMiddleware, async (req, res) => {
 
         const motivosValidos = ['spam', 'contenido_inapropiado', 'violencia', 'odio', 'copyright'];
         if (!motivo || !motivosValidos.includes(motivo)) {
-            return res.redirect('back');
+            return res.status(400).json({ error: 'motivo invalido' });
         }
 
         const comentarioItem = await comentario.findByPk(id_comentario, {
@@ -35,11 +34,11 @@ router.post('/:id', authMiddleware, async (req, res) => {
         });
 
         if (!comentarioItem) {
-            return res.redirect('back');
+            return res.status(404).json({ error: 'comentario no encontrado' });
         }
 
         if (comentarioItem.id_usuario === id_usuario) {
-            return res.redirect('back');
+            return res.status(400).json({ error: 'no puedes reportar tu propio comentario' });
         }
 
         const reporteExistente = await reporte_comentario.findOne({
@@ -47,7 +46,7 @@ router.post('/:id', authMiddleware, async (req, res) => {
         });
 
         if (reporteExistente) {
-            return res.redirect('back');
+            return res.status(400).json({ error: 'ya reportaste este comentario' });
         }
 
         await reporte_comentario.create({
@@ -58,19 +57,20 @@ router.post('/:id', authMiddleware, async (req, res) => {
         });
 
         const link = `/publicaciones/${comentarioItem.publicacion.id}`;
-
-        const mensaje = `Se reportó un comentario en tu publicación <a href="${link}">"${comentarioItem.publicacion.titulo.substring(0, 50)}"</a>`;
+        const mensaje = `Se reportó un comentario en tu publicación "${comentarioItem.publicacion.titulo.substring(0, 50)}"`;
 
         await crearNotificacion(
             comentarioItem.publicacion.id_usuario,
             id_usuario,
-            mensaje
+            mensaje,
+            link
         );
 
-        res.redirect('back');
+        res.json({ success: true });
+
     } catch (error) {
         console.error('Error al reportar comentario:', error);
-        res.redirect('back');
+        res.status(500).json({ error: 'error al reportar comentario' });
     }
 });
 

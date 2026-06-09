@@ -22,14 +22,11 @@ block content
                                 strong #{seguidosCount || 0}
                                 br
                                 small Seguidos
-
                     if !esMiPerfil && session && session.id_usuario
                         if siguiendo
-                            form(action=`/follower/dejar-seguir/${perfil ? perfil.id : usuario.id}`, method="POST" class="mt-3")
-                                button.btn.btn-danger(type="submit") Dejar de seguir
+                            button.btn.btn-danger(id="btnSeguir" data-id=perfil.id data-accion="dejar-seguir") Dejar de seguir
                         else
-                            form(action=`/follower/seguir/${perfil ? perfil.id : usuario.id}`, method="POST" class="mt-3")
-                                button.btn.btn-primary(type="submit") Seguir
+                            button.btn.btn-primary(id="btnSeguir" data-id=perfil.id data-accion="seguir") Seguir
 
                     if esMiPerfil
                         a.btn.btn-outline-secondary.mt-3(href="/perfil/editar") Editar perfil
@@ -150,10 +147,63 @@ block content
                 .modal-footer
                     button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cerrar
 
-    // ALERTA DE PUBLICACIONES ELIMINADAS (dentro del flujo, bien indentada)
+    // ALERTA DE PUBLICACIONES ELIMINADAS 
     if publicacionesEliminadas > 0
         .alert.alert-warning.mt-2
             strong Atención: 
             | Has tenido #{publicacionesEliminadas}/3 publicaciones eliminadas.
             if publicacionesEliminadas >= 3
                 | Tu cuenta está inactiva. Contacta al administrador.
+
+    //seguir y dejar de seguir ajax
+    script.
+        const btnSeguir = document.getElementById('btnSeguir');
+        if (btnSeguir) {
+            btnSeguir.addEventListener('click', async function() {
+                const usuarioId = this.dataset.id;
+                const accion = this.dataset.accion;
+
+                const textoOriginal = this.innerHTML;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Cargando...';
+                this.disabled = true;
+
+                try {
+                    const response = await fetch(`/follower/${accion}/${usuarioId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // actualizar boton segun data.siguiendo
+                        if (data.siguiendo) {
+                            this.innerHTML = 'Dejar de seguir';
+                            this.classList.remove('btn-primary');
+                            this.classList.add('btn-danger');
+                            this.dataset.accion = 'dejar-seguir';
+                        } else {
+                            this.innerHTML = 'Seguir';
+                            this.classList.remove('btn-danger');
+                            this.classList.add('btn-primary');
+                            this.dataset.accion = 'seguir';
+                        }
+
+                        // actualizar contadores
+                        const seguidoresSpan = document.querySelector('.col-4:nth-child(2) strong');
+                        const seguidosSpan = document.querySelector('.col-4:nth-child(3) strong');
+                        if (seguidoresSpan) seguidoresSpan.textContent = data.seguidoresCount;
+                        if (seguidosSpan) seguidosSpan.textContent = data.seguidosCount;
+
+                        console.log('Estado actualizado - siguiendo:', data.siguiendo);
+                    } else {
+                        alert(data.error || 'Error al procesar la solicitud');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al procesar la solicitud');
+                } finally {
+                    this.disabled = false;
+                }
+            });
+        }

@@ -8,7 +8,7 @@ block content
             // TITULO
             h1.mb-4.text-center= publicacion.titulo
 
-            // CARRUSEL CENTRADO (80% del ancho)
+            // CARRUSEL
             if publicacion.imagenes && publicacion.imagenes.length
                 .d-flex.justify-content-center
                     div(style="width: 80%;")
@@ -16,7 +16,6 @@ block content
                             .carousel-indicators
                                 each img, idx in publicacion.imagenes
                                     button(type="button" data-bs-target="#carouselImagenes" data-bs-slide-to=idx class=idx === 0 ? "active" : "")
-
                             .carousel-inner
                                 each img, idx in publicacion.imagenes
                                     .carousel-item(class=idx === 0 ? "active" : "")
@@ -24,19 +23,17 @@ block content
                                             img.d-block.w-100.rounded(src=img.url style="height: 400px; object-fit: cover;")
                                             if img.licencia === 'copyright' && img.marca_agua
                                                 div(style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;") #{img.marca_agua}
-
                             button.carousel-control-prev(type="button" data-bs-target="#carouselImagenes" data-bs-slide="prev")
                                 span.carousel-control-prev-icon
                             button.carousel-control-next(type="button" data-bs-target="#carouselImagenes" data-bs-slide="next")
                                 span.carousel-control-next-icon
-
                 if publicacion.imagenes[0]
                     p.mt-2.text-center.text-muted Licencia: #{publicacion.imagenes[0].licencia}
             else
                 .alert.alert-info.mb-4
                     p No hay imagenes para esta publicacion
 
-            // DESCRIPCIÓN Y DEMÁS
+            // DESCRIPCION
             .card.mt-4
                 .card-body
                     p.card-text= publicacion.descripcion
@@ -52,45 +49,45 @@ block content
                     each etiq in publicacion.etiquetas
                         a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
 
-            // SECCION DE VALORACION
+            // VALORACION
             if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
                 .card.mt-3.mb-3
                     .card-header
-                        strong Valorar publicación
+                        strong Valorar publicacion
                     .card-body
-                        form(action=`/valoracion/publicacion/${publicacion.id}`, method="POST" class="d-flex align-items-center gap-3")
-                            label.me-2 Puntuacion:
-                            input(type="range" name="puntaje" min="1" max="5" step="1", value=votoUsuario || 3, oninput="this.nextElementSibling.value = this.value")
-                            output #{votoUsuario || 3}
-                            button.btn.btn-primary(type="submit") 
-                                if votoUsuario
-                                    | Actualizar voto
-                                else
-                                    | Votar
+                        form(id="formValoracion")
+                            .d-flex.align-items-center.gap-3
+                                label.me-2 Puntuacion:
+                                input(type="range" name="puntaje" min="1" max="5" step="1" value=votoUsuario || 3 oninput="this.nextElementSibling.value = this.value")
+                                output #{votoUsuario || 3}
+                                button.btn.btn-primary(type="submit") 
+                                    if votoUsuario
+                                        | Actualizar voto
+                                    else
+                                        | Votar
 
             // Mostrar promedio de votos
-            if cantidadVotos > 0
-                .alert.alert-info.mt-2
+            .alert.mt-2(id="votosAlert")
+                if cantidadVotos > 0
                     strong Promedio: 
                     | #{promedio.toFixed(1)} / 5.0
                     |  (#{cantidadVotos} voto#{cantidadVotos !== 1 ? 's' : ''})
-            else
-                .alert.alert-secondary.mt-2
-                    | Sin valoraciones aún. ¡Sé el primero!
+                else
+                    | Sin valoraciones aun. ¡Se el primero!
 
             if cantidadReportes > 0
                 .mt-2
                     small.text-muted 
                         | Reportes: #{cantidadReportes}/3
 
-            // BOTON DE REPORTE PUBLICACION
+            // BOTON REPORTE PUBLICACION
             if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
                 .mt-3
                     button.btn.btn-outline-danger.btn-sm(type="button" data-bs-toggle="modal" data-bs-target="#modalReporte")
                         i.bi.bi-flag
-                        |  Reportar publicación
+                        |  Reportar publicacion
 
-            // BOTÓN ME INTERESA (con AJAX)
+            // ME INTERESA
             if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
                 .mt-3
                     button.btn.btn-sm(id="btnMeInteresa" data-id=publicacion.id class=yaInteresado ? 'btn-outline-secondary' : 'btn-outline-success')
@@ -99,13 +96,13 @@ block content
                     span.ms-2.text-muted(id=`interesados-${publicacion.id}`) 
                         | #{interesadosCount || 0} interesados
 
-            // BOTÓN GUARDAR EN COLECCIÓN
+            // GUARDAR EN COLECCION
             if session && session.id_usuario && misColecciones
                 .mt-3
                     .dropdown
                         button.btn.btn-outline-info.btn-sm.dropdown-toggle(type="button" data-bs-toggle="dropdown")
                             i.bi.bi-bookmark-plus
-                            |  Guardar en colección
+                            |  Guardar en coleccion
                         ul.dropdown-menu
                             each coleccionItem in misColecciones
                                 li
@@ -116,9 +113,9 @@ block content
                             li
                                 a.dropdown-item(href="/colecciones/crear")
                                     i.bi.bi-plus-circle
-                                    |  Crear nueva colección
+                                    |  Crear nueva coleccion
 
-            // SECCION DE COMENTARIOS
+            // COMENTARIOS
             .row.mt-5
                 .col-12
                     hr
@@ -139,17 +136,16 @@ block content
                                                 small.text-muted= comentario.createdAt
                                             div
                                                 if session && session.id_usuario && comentario.id_usuario !== session.id_usuario
-                                                    button.btn.btn-sm.btn-outline-danger(type="button" data-bs-toggle="modal" data-bs-target="#modalReporteComentario" data-id=comentario.id)
+                                                    button.btn.btn-sm.btn-outline-danger.reportar-comentario(type="button" data-id=comentario.id)
                                                         i.bi.bi-flag
                                                         |  Reportar
                                                 if session && session.id_usuario && publicacion.id_usuario === session.id_usuario && comentario.reportes && comentario.reportes.length > 0
-                                                    form(action=`/publicaciones/eliminar/${comentario.id}`, method="POST" class="d-inline ms-2" onsubmit="return confirm('¿Eliminar este comentario?')")
-                                                        button.btn.btn-sm.btn-danger(type="submit")
-                                                            i.bi.bi-trash
-                                                            |  Eliminar (#{comentario.reportes.length} reportes)
+                                                    button.btn.btn-sm.btn-danger.eliminar-comentario(data-id=comentario.id)
+                                                        i.bi.bi-trash
+                                                        |  Eliminar (#{comentario.reportes.length} reportes)
                         else
                             .alert.alert-secondary
-                                p.mb-0(id="noComentariosMsg") No hay comentarios aún. ¡Sé el primero en comentar!
+                                p.mb-0(id="noComentariosMsg") No hay comentarios aun. ¡Se el primero en comentar!
 
                     if session && session.id_usuario
                         .card.mt-3
@@ -163,19 +159,21 @@ block content
                     else
                         .alert.alert-info.mt-3
                             p.mb-0 
-                                a(href="/login") Inicia sesión
+                                a(href="/login") Inicia sesion
                                 |  para comentar
 
-            // MODAL DE REPORTE PUBLICACION
+            // MODAL REPORTE PUBLICACION
             if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
-                .modal.fade(id="modalReporte" tabindex="-1")
+                .modal.fade(id="modalReporte" tabindex="-1" aria-hidden="true")
                     .modal-dialog
                         .modal-content
                             .modal-header
-                                h5.modal-title Reportar publicación
-                                button.btn-close(type="button" data-bs-dismiss="modal")
+                                h5.modal-title Reportar publicacion
+                                button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
                             .modal-body
-                                form(action=`/reportes/publicacion/${publicacion.id}`, method="POST" id="formReporte")
+                                // CONTENEDOR PARA MENSAJES DE ERROR
+                                div(id="reportePublicacionError" class="alert alert-danger" style="display: none;")
+                                form(id="formReportePublicacion")
                                     .mb-3
                                         label.form-label(for="motivo") Motivo *
                                         select.form-select(name="motivo" id="motivo", required)
@@ -184,24 +182,27 @@ block content
                                             option(value="contenido_inapropiado") Contenido inapropiado
                                             option(value="violencia") Violencia
                                             option(value="odio") Discurso de odio
-                                            option(value="copyright") Violación de copyright
+                                            option(value="copyright") Violacion de copyright
                                     .mb-3
-                                        label.form-label(for="descripcion") Descripción (opcional)
-                                        textarea.form-control(name="descripcion" id="descripcion" rows="3" placeholder="Explica con más detalles...")
+                                        label.form-label(for="descripcion") Descripcion (opcional)
+                                        textarea.form-control(name="descripcion" id="descripcion" rows="3" placeholder="Explica con mas detalles...")
                                     .modal-footer
                                         button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancelar
                                         button.btn.btn-danger(type="submit") Enviar reporte
 
-            // MODAL DE REPORTE COMENTARIO
+
+            // MODAL REPORTE COMENTARIO
             if session && session.id_usuario
-                .modal.fade(id="modalReporteComentario" tabindex="-1")
+                .modal.fade(id="modalReporteComentario" tabindex="-1" aria-hidden="true")
                     .modal-dialog
                         .modal-content
                             .modal-header
                                 h5.modal-title Reportar comentario
-                                button.btn-close(type="button" data-bs-dismiss="modal")
+                                button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
                             .modal-body
-                                form(id="formReporteComentario" method="POST")
+                                // CONTENEDOR PARA MENSAJES DE ERROR
+                                div(id="reporteComentarioError" class="alert alert-danger" style="display: none;")
+                                form(id="formReporteComentario")
                                     .mb-3
                                         label.form-label(for="motivo_comentario") Motivo *
                                         select.form-select(name="motivo" id="motivo_comentario", required)
@@ -210,74 +211,162 @@ block content
                                             option(value="contenido_inapropiado") Contenido inapropiado
                                             option(value="violencia") Violencia
                                             option(value="odio") Discurso de odio
-                                            option(value="copyright") Violación de copyright
+                                            option(value="copyright") Violacion de copyright
                                     .mb-3
-                                        label.form-label(for="descripcion_comentario") Descripción (opcional)
-                                        textarea.form-control(name="descripcion" id="descripcion_comentario" rows="3" placeholder="Explica con más detalles...")
+                                        label.form-label(for="descripcion_comentario") Descripcion (opcional)
+                                        textarea.form-control(name="descripcion" id="descripcion_comentario" rows="3" placeholder="Explica con mas detalles...")
                                     .modal-footer
                                         button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancelar
                                         button.btn.btn-danger(type="submit") Enviar reporte
-        else
-            .alert.alert-danger
-                p Publicación no encontrada
 
     script.
-        // reportar comentario
-        const modalReporteComentario = document.getElementById('modalReporteComentario');
-        if (modalReporteComentario) {
-            modalReporteComentario.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const comentarioId = button.getAttribute('data-id');
-                console.log('Modal abierto, comentario ID:', comentarioId);
+        // cerrar modal reporte comentario
+        const cerrarModalComentario = () => {
+            const modalElement = document.getElementById('modalReporteComentario');
+            if (modalElement) {
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) modal.hide();
+            }
+        };
+
+        // cerrar modal reporte publicacion
+        const cerrarModalPublicacion = () => {
+            const modalElement = document.getElementById('modalReporte');
+            if (modalElement) {
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) modal.hide();
+            }
+        };
+
+        // funcion para mostrar mensajes temporales
+        const mostrarMensaje = (contenedorId, mensaje, tipo) => {
+            const contenedor = document.getElementById(contenedorId);
+            if (contenedor) {
+                contenedor.innerHTML = `<div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${mensaje}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>`;
+                setTimeout(() => {
+                    const alert = contenedor.querySelector('.alert');
+                    if (alert) alert.remove();
+                }, 5000);
+            }
+        };
+
+        // reportar comentario abrir modal
+        const botonesReportar = document.querySelectorAll('.reportar-comentario');
+        for (let i = 0; i < botonesReportar.length; i++) {
+            botonesReportar[i].addEventListener('click', function() {
+                const comentarioId = this.dataset.id;
                 const form = document.getElementById('formReporteComentario');
-                form.action = `/reportes/comentario/${comentarioId}`;
-                console.log('Form action actualizado a:', form.action);
+                if (form) {
+                    form.action = '/reportes/comentario/' + comentarioId;
+                    form.reset();
+                }
+                // limpiar errores anteriores
+                const errorDiv = document.getElementById('reporteComentarioError');
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                    errorDiv.innerHTML = '';
+                }
+                const modalElement = document.getElementById('modalReporteComentario');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
             });
         }
 
-        // Me interesa AJAX
-        const btnMeInteresa = document.getElementById('btnMeInteresa');
-        if (btnMeInteresa) {
-            btnMeInteresa.addEventListener('click', async function() {
-                const publicacionId = this.dataset.id;
-                const spanInteresados = document.getElementById(`interesados-${publicacionId}`);
-
-                try {
-                    const response = await fetch(`/me-interesa/publicacion/${publicacionId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    const data = await response.json();
-
-                    if (data.success) {
-                        spanInteresados.innerHTML = `${data.cantidad} interesados`;
-                        if (data.yaInteresado) {
-                            this.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> No me interesa';
-                            this.classList.remove('btn-outline-success');
-                            this.classList.add('btn-outline-secondary');
-                        } else {
-                            this.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> Me interesa';
-                            this.classList.remove('btn-outline-secondary');
-                            this.classList.add('btn-outline-success');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Error al procesar la solicitud');
+        // resetear formulario cuando se abre el modal de publicacion
+        const modalReporte = document.getElementById('modalReporte');
+        if (modalReporte) {
+            modalReporte.addEventListener('show.bs.modal', function() {
+                const form = document.getElementById('formReportePublicacion');
+                if (form) form.reset();
+                const errorDiv = document.getElementById('reportePublicacionError');
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                    errorDiv.innerHTML = '';
                 }
             });
         }
 
-        // Comentarios con ajax
-        const formComentario = document.getElementById('formComentario');
-        if (formComentario) {
-            formComentario.addEventListener('submit', async function(e) {
+        // enviar reporte comentario ajax
+        const formReporteComentario = document.getElementById('formReporteComentario');
+        if (formReporteComentario) {
+            formReporteComentario.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                const texto = document.getElementById('comentarioTexto').value;
-                const publicacionId = #{publicacion.id};
+                const action = this.action;
+                const motivo = document.getElementById('motivo_comentario').value;
+                const descripcion = document.getElementById('descripcion_comentario').value;
+                
+                const errorDiv = document.getElementById('reporteComentarioError');
+                errorDiv.style.display = 'none';
+                errorDiv.innerHTML = '';
 
-                if (!texto.trim()) {
-                    alert('Escribe un comentario');
+                const btnSubmit = this.querySelector('button[type="submit"]');
+                const textoOriginal = btnSubmit.innerHTML;
+                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
+                btnSubmit.disabled = true;
+
+                try {
+                    const response = await fetch(action, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ motivo: motivo, descripcion: descripcion })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // crear mensaje de exito dentro del modal
+                        const successDiv = document.createElement('div');
+                        successDiv.className = 'alert alert-success';
+                        successDiv.innerHTML = '<i class="bi bi-check-circle"></i> Reporte enviado correctamente';
+                        const modalBody = document.querySelector('#modalReporteComentario .modal-body');
+                        const form = document.getElementById('formReporteComentario');
+                        modalBody.insertBefore(successDiv, form);
+                        
+                        // cerrar modal 
+                        setTimeout(() => {
+                            cerrarModalComentario();
+                            formReporteComentario.reset();
+                            successDiv.remove();
+                        }, 1500);
+                    } else if (data.error === 'ya reportaste este comentario') {
+                        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Ya reportaste este comentario';
+                        errorDiv.style.display = 'block';
+                    } else {
+                        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + (data.error || 'Error al enviar reporte');
+                        errorDiv.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error al enviar reporte';
+                    errorDiv.style.display = 'block';
+                } finally {
+                    btnSubmit.innerHTML = textoOriginal;
+                    btnSubmit.disabled = false;
+                }
+            });
+        }
+
+        // enviar reporte publicacion ajax
+        const formReportePublicacion = document.getElementById('formReportePublicacion');
+        if (formReportePublicacion) {
+            const publicacionId = #{publicacion.id};
+
+            formReportePublicacion.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const motivo = document.getElementById('motivo').value;
+                const descripcion = document.getElementById('descripcion').value;
+
+                const errorDiv = document.getElementById('reportePublicacionError');
+                errorDiv.style.display = 'none';
+                errorDiv.innerHTML = '';
+
+                if (!motivo) {
+                    errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Selecciona un motivo';
+                    errorDiv.style.display = 'block';
                     return;
                 }
 
@@ -287,30 +376,200 @@ block content
                 btnSubmit.disabled = true;
 
                 try {
-                    const response = await fetch(`/publicaciones/${publicacionId}/comentario`, {
+                    const response = await fetch('/reportes/publicacion/' + publicacionId, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ texto: texto })
+                        body: JSON.stringify({ 
+                            motivo: motivo, 
+                            descripcion: descripcion 
+                        })
                     });
 
                     const data = await response.json();
 
                     if (data.success) {
-                        document.getElementById('comentarioTexto').value = '';
-                        const noComentariosMsg = document.getElementById('noComentariosMsg');
-                        if (noComentariosMsg) {
-                            noComentariosMsg.style.display = 'none';
+                        // mensaje de exito dentro del modal
+                        const successDiv = document.createElement('div');
+                        successDiv.className = 'alert alert-success';
+                        successDiv.innerHTML = '<i class="bi bi-check-circle"></i> Reporte enviado correctamente';
+                        const modalBody = document.querySelector('#modalReporte .modal-body');
+                        const form = document.getElementById('formReportePublicacion');
+                        modalBody.insertBefore(successDiv, form);
+                        
+                        // actualizar contador de reportes
+                        const contadorReportes = document.querySelector('.text-muted small');
+                        if (contadorReportes && contadorReportes.textContent.includes('Reportes:')) {
+                            const match = contadorReportes.textContent.match(/\d+/);
+                            if (match) {
+                                const reportesActual = parseInt(match[0]);
+                                contadorReportes.textContent = `Reportes: ${reportesActual + 1}/3`;
+                            }
                         }
-                        location.reload();
+                        
+                        // Cerrar modal  
+                        setTimeout(() => {
+                            cerrarModalPublicacion();
+                            formReportePublicacion.reset();
+                            successDiv.remove();
+                        }, 1500);
+                    } else if (data.error === 'ya reportaste esta publicacion') {
+                        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Ya reportaste esta publicacion';
+                        errorDiv.style.display = 'block';
                     } else {
-                        alert(data.error || 'Error al enviar comentario');
+                        errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + (data.error || 'Error al enviar reporte');
+                        errorDiv.style.display = 'block';
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Error al enviar comentario');
+                    errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error al enviar reporte';
+                    errorDiv.style.display = 'block';
                 } finally {
                     btnSubmit.innerHTML = textoOriginal;
                     btnSubmit.disabled = false;
                 }
             });
         }
+
+        // me interesa ajax
+        const btnMeInteresa = document.getElementById('btnMeInteresa');
+        if (btnMeInteresa) {
+            btnMeInteresa.addEventListener('click', async function() {
+                const publicacionId = this.dataset.id;
+                const spanInteresados = document.getElementById('interesados-' + publicacionId);
+                try {
+                    const response = await fetch('/me-interesa/publicacion/' + publicacionId, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        spanInteresados.innerHTML = data.cantidad + ' interesados';
+                        if (data.yaInteresado) {
+                            this.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> No me interesa';
+                            this.classList.remove('btn-outline-success');
+                            this.classList.add('btn-outline-secondary');
+                            mostrarMensaje('votosAlert', 'Ya no te interesa esta publicacion', 'info');
+                        } else {
+                            this.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> Me interesa';
+                            this.classList.remove('btn-outline-secondary');
+                            this.classList.add('btn-outline-success');
+                            mostrarMensaje('votosAlert', 'Te interesa esta publicacion', 'success');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    mostrarMensaje('votosAlert', 'Error al procesar la solicitud', 'danger');
+                }
+            });
+        }
+
+        // comentarios ajax
+        const formComentario = document.getElementById('formComentario');
+        if (formComentario) {
+            const publicacionId = #{publicacion.id};
+            formComentario.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const texto = document.getElementById('comentarioTexto').value;
+                if (!texto.trim()) {
+                    mostrarMensaje('comentariosContainer', 'Escribe un comentario antes de enviar', 'warning');
+                    return;
+                }
+                const btnSubmit = this.querySelector('button[type="submit"]');
+                const textoOriginal = btnSubmit.innerHTML;
+                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
+                btnSubmit.disabled = true;
+                try {
+                    const response = await fetch('/publicaciones/' + publicacionId + '/comentario', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ texto: texto })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        mostrarMensaje('comentariosContainer', data.error || 'Error al enviar comentario', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    mostrarMensaje('comentariosContainer', 'Error al enviar comentario', 'danger');
+                } finally {
+                    btnSubmit.innerHTML = textoOriginal;
+                    btnSubmit.disabled = false;
+                }
+            });
+        }
+
+        // valoracion ajax
+        const formValoracion = document.getElementById('formValoracion');
+        if (formValoracion) {
+            const publicacionId = #{publicacion.id};
+            formValoracion.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const puntaje = this.querySelector('input[name="puntaje"]').value;
+                try {
+                    const response = await fetch('/valoracion/publicacion/' + publicacionId, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ puntaje: puntaje })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        const alertDiv = document.getElementById('votosAlert');
+                        if (data.cantidad > 0) {
+                            alertDiv.innerHTML = '<strong>Promedio:</strong> ' + data.promedio.toFixed(1) + ' / 5.0 (' + data.cantidad + ' voto' + (data.cantidad !== 1 ? 's' : '') + ')';
+                        } else {
+                            alertDiv.innerHTML = 'Sin valoraciones aun. ¡Se el primero!';
+                        }
+                        const btn = this.querySelector('button');
+                        if (btn) btn.innerHTML = 'Actualizar voto';
+                        mostrarMensaje('votosAlert', 'Valoracion guardada correctamente', 'success');
+                    } else {
+                        mostrarMensaje('votosAlert', data.error || 'Error al votar', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    mostrarMensaje('votosAlert', 'Error al votar', 'danger');
+                }
+            });
+        }
+
+        // eliminar comentario ajax
+        document.querySelectorAll('.eliminar-comentario').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const comentarioId = this.dataset.id;
+                if (!confirm('¿Eliminar este comentario?')) return;
+
+                const textoOriginal = this.innerHTML;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                this.disabled = true;
+
+                try {
+                    const response = await fetch('/publicaciones/eliminar/' + comentarioId, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const comentarioDiv = document.getElementById('comentario-' + comentarioId);
+                        if (comentarioDiv) comentarioDiv.remove();
+
+                        const container = document.getElementById('comentariosContainer');
+                        if (container && container.children.length === 0) {
+                            container.innerHTML = '<div class="alert alert-secondary"><p class="mb-0" id="noComentariosMsg">No hay comentarios aun. ¡Se el primero en comentar!</p></div>';
+                        }
+                        mostrarMensaje('comentariosContainer', 'Comentario eliminado correctamente', 'success');
+                    } else {
+                        mostrarMensaje('comentariosContainer', data.error || 'Error al eliminar comentario', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    mostrarMensaje('comentariosContainer', 'Error al eliminar comentario', 'danger');
+                } finally {
+                    this.innerHTML = textoOriginal;
+                    this.disabled = false;
+                }
+            });
+        });
