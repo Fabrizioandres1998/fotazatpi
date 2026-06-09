@@ -29,7 +29,9 @@ block content
                             button.btn.btn-primary(id="btnSeguir" data-id=perfil.id data-accion="seguir") Seguir
 
                     if esMiPerfil
-                        a.btn.btn-outline-secondary.mt-3(href="/perfil/editar") Editar perfil
+                        a.btn.btn-primary.mt-3.ms-2(href="/publicaciones/crear")
+                            i.bi.bi-plus-circle
+                            |  Nueva publicacion
 
         .col-md-8
             - const tituloPerfil = esMiPerfil ? "Mis Publicaciones" : `Publicaciones de ${perfil ? perfil.username : usuario.username}`

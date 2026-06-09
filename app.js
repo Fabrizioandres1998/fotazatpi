@@ -106,7 +106,7 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// MIDDLEWARE DE AUTENTICACIÓN GLOBAL
+// MIDDLEWARE DE AUTENTICACION GLOBAL
 app.use((req, res, next) => {
   const publicPaths = ['/login', '/registro', '/', '/publicaciones'];
   const isPublicPath = publicPaths.some(path => req.path === path || req.path.startsWith('/publicaciones') || req.path === '/favicon.ico');
