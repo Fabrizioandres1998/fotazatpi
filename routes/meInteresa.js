@@ -18,46 +18,54 @@ async function crearNotificacion(id_usuario_destino, id_usuario_origen, id_publi
     }
 }
 
-// marcar o quitar me interesa
+// marcar o quitar me interesa (AJAX)
 router.post('/publicacion/:id', authMiddleware, async (req, res) => {
     try {
         const id_publicacion = req.params.id;
         const id_usuario = req.session.id_usuario;
 
-        // publicacion existe
         const publicacion = await Publicacion.findByPk(id_publicacion);
         if (!publicacion) {
-            return res.redirect('back');
+            return res.status(404).json({ error: 'Publicación no encontrada' });
         }
 
-        // verificar si marco interes
         const existe = await me_interesa.findOne({
             where: { id_usuario, id_publicacion }
         });
 
+        let accion;
         if (existe) {
-            // quitar interes
             await existe.destroy();
+            accion = 'quitado';
         } else {
-            // marcar interes
             await me_interesa.create({ id_usuario, id_publicacion });
-
-            // Crear notificacion para el dueño de la publicacion
+            accion = 'agregado';
+            
             if (publicacion.id_usuario !== id_usuario) {
                 await crearNotificacion(
                     publicacion.id_usuario,
                     id_usuario,
-                    id_publicacion,  // ← PASAR EL ID DE LA PUBLICACIÓN
+                    id_publicacion,
                     `quiere adquirir tu publicación "${publicacion.titulo.substring(0, 50)}"`
                 );
             }
         }
 
-        res.redirect('back');
+        // Obtener nuevo contador
+        const cantidad = await me_interesa.count({
+            where: { id_publicacion }
+        });
+
+        res.json({
+            success: true,
+            accion: accion,
+            cantidad: cantidad,
+            yaInteresado: accion === 'agregado'
+        });
 
     } catch (error) {
         console.error('Error al procesar interés:', error);
-        res.redirect('back');
+        res.status(500).json({ error: 'Error al procesar la solicitud' });
     }
 });
 

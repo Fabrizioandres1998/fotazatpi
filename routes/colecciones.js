@@ -3,18 +3,17 @@ const router = express.Router();
 const { coleccion, coleccion_publicacion, Publicacion, Imagen, Usuario } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// Formulario para crear colección (DEBE IR ANTES que /:id)
+// formulario para crear coleccion
 router.get('/crear', authMiddleware, (req, res) => {
     res.render('colecciones/crearColeccion');
 });
 
-// Crear colección
+// crear coleccion
 router.post('/crear', authMiddleware, async (req, res) => {
     try {
         const { nombre } = req.body;
 
         if (!nombre || nombre.trim() === '') {
-            // Redirige sin flash si no funciona
             return res.redirect('/colecciones/crear');
         }
 
@@ -30,7 +29,7 @@ router.post('/crear', authMiddleware, async (req, res) => {
     }
 });
 
-// Listar mis colecciones
+// listar mis colecciones
 router.get('/', authMiddleware, async (req, res) => {
     try {
         const colecciones = await coleccion.findAll({
@@ -44,19 +43,18 @@ router.get('/', authMiddleware, async (req, res) => {
                 limit: 3,
                 order: [['createdAt', 'DESC']]
             });
-            // CORREGIDO: asignar directamente como propiedad
             coleccionItem.publicaciones = publicaciones;
         }
 
-        console.log('Colecciones encontradas:', colecciones.length);
+        console.log('colecciones encontradas:', colecciones.length);
         res.render('colecciones/index', { colecciones });
     } catch (error) {
-        console.error('ERROR:', error);
-        res.status(500).send('Error al cargar colecciones: ' + error.message);
+        console.error('error:', error);
+        res.status(500).send('error al cargar colecciones: ' + error.message);
     }
 });
 
-// Ver una colección específica (DEBE IR DESPUÉS de /crear)
+// ver una coleccion especifica 
 router.get('/:id', authMiddleware, async (req, res) => {
     try {
         const coleccionItem = await coleccion.findOne({
@@ -81,11 +79,11 @@ router.get('/:id', authMiddleware, async (req, res) => {
         res.render('colecciones/verColecciones', { coleccion: coleccionItem });
     } catch (error) {
         console.error(error);
-        res.status(500).send('Error al cargar la colección');
+        res.status(500).send('error al cargar la coleccion');
     }
 });
 
-// Agregar publicación a colección
+// agregar publicacion a coleccion
 router.post('/:id/agregar/:id_publicacion', authMiddleware, async (req, res) => {
     try {
         const id_coleccion = req.params.id;
@@ -119,7 +117,7 @@ router.post('/:id/agregar/:id_publicacion', authMiddleware, async (req, res) => 
     }
 });
 
-// Quitar publicación de colección
+// quitar publicacion de coleccion
 router.post('/:id/quitar/:id_publicacion', authMiddleware, async (req, res) => {
     try {
         const id_coleccion = req.params.id;
@@ -136,7 +134,7 @@ router.post('/:id/quitar/:id_publicacion', authMiddleware, async (req, res) => {
     }
 });
 
-// Eliminar colección
+// eliminar coleccion
 router.post('/eliminar/:id', authMiddleware, async (req, res) => {
     try {
         await coleccion.destroy({

@@ -1,22 +1,36 @@
 const express = require('express');
 const router = express.Router();
-const { Publicacion, Imagen, Usuario, Etiqueta, comentario, Valoracion, reporte_publicacion, me_interesa, reporte_comentario, coleccion } = require('../models');
+const { Publicacion, Imagen, Usuario, Etiqueta, comentario, Valoracion, reporte_publicacion, me_interesa, reporte_comentario, coleccion, follower } = require('../models');
 const { sequelize } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
+const { Op } = require('sequelize');
 
-// listar todas o filtrar por etiqueta
+// listar todas, filtrar por etiqueta o buscar
 router.get('/', async (req, res) => {
-    const { etiqueta } = req.query;
+    const { etiqueta, busqueda } = req.query;
     let publicaciones = [];
+    let usuarios = [];
+    let whereCondition = {};
 
     try {
+        // condicion de busqueda
+        if (busqueda && busqueda.trim() !== '') {
+            whereCondition = {
+                [Op.or]: [
+                    { titulo: { [Op.like]: `%${busqueda}%` } },
+                    { descripcion: { [Op.like]: `%${busqueda}%` } }
+                ]
+            };
+        }
+
         if (etiqueta) {
             const etiquetaEncontrada = await Etiqueta.findOne({
                 where: { nombre: etiqueta.toLowerCase() }
-            })
+            });
 
             if (etiquetaEncontrada) {
                 publicaciones = await etiquetaEncontrada.getPublicaciones({
+                    where: whereCondition,
                     include: [
                         { model: Imagen, as: 'imagenes' },
                         { model: Usuario },
@@ -27,35 +41,88 @@ router.get('/', async (req, res) => {
                 publicaciones = [];
             }
         } else {
-            if (!req.session.id_usuario) {
+            const isLoggedIn = req.session && req.session.id_usuario;
+
+            // Buscar publicaciones
+            if (!isLoggedIn) {
                 publicaciones = await Publicacion.findAll({
+                    where: whereCondition,
                     include: [
                         { model: Usuario },
                         { model: Imagen, as: "imagenes", where: { licencia: "sin_copyright" } }
                     ]
-                })
-                return res.render('publicaciones', {
-                    publicaciones,
-                    filtro: null
+                });
+            } else {
+                publicaciones = await Publicacion.findAll({
+                    where: whereCondition,
+                    include: [
+                        { model: Imagen, as: "imagenes" },
+                        { model: Usuario },
+                        { model: Etiqueta, as: "etiquetas" }
+                    ]
                 });
             }
-            publicaciones = await Publicacion.findAll({
-                include: [
-                    { model: Imagen, as: "imagenes" },
-                    { model: Usuario },
-                    { model: Etiqueta, as: "etiquetas" }
-                ]
-            });
+
+            // buscar usuarios
+            if (busqueda && busqueda.trim() !== '' && publicaciones.length === 0) {
+                usuarios = await Usuario.findAll({
+                    where: {
+                        username: { [Op.like]: `%${busqueda}%` }
+                    },
+                    attributes: ['id', 'username', 'email']
+                });
+            }
         }
 
         res.render('publicaciones', {
             publicaciones,
-            filtro: etiqueta || null
+            usuarios,
+            filtro: etiqueta || null,
+            busqueda: busqueda || null
         });
 
     } catch (error) {
+        console.error('Error en /publicaciones:', error);
+        res.status(500).send("Error al cargar publicaciones: " + error.message);
+    }
+});
+
+// publicaciones de usuarios que sigo (feed)
+router.get('/feed', authMiddleware, async (req, res) => {
+    try {
+        const id_usuario = req.session.id_usuario;
+
+        const seguidos = await follower.findAll({
+            where: { id_seguidor: id_usuario },
+            attributes: ['id_seguido']
+        });
+
+        const idsSeguidos = seguidos.map(s => s.id_seguido);
+
+        if (idsSeguidos.length === 0) {
+            return res.render('feed', {
+                publicaciones: [],
+                mensaje: 'Aún no sigues a nadie. Sigue a otros usuarios para ver sus publicaciones.'
+            });
+        }
+
+        const publicaciones = await Publicacion.findAll({
+            where: { id_usuario: idsSeguidos },
+            include: [
+                { model: Imagen, as: 'imagenes' },
+                { model: Usuario },
+                { model: Etiqueta, as: 'etiquetas' }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        res.render('feed', {
+            publicaciones,
+            mensaje: null
+        });
+    } catch (error) {
         console.error(error);
-        res.status(500).send("Error al cargar publicaciones");
+        res.status(500).send('Error al cargar el feed');
     }
 });
 
@@ -74,21 +141,15 @@ router.get('/:id', async (req, res) => {
             return res.status(404).send("Publicación no encontrada");
         }
 
-        // traer comentarios con los datos del usuario y sus reportes
         const comentarios = await comentario.findAll({
             where: { id_publicacion: req.params.id },
             include: [
                 { model: Usuario, as: 'usuario' },
-                {
-                    model: reporte_comentario,
-                    as: 'reportes',
-                    required: false
-                }
+                { model: reporte_comentario, as: 'reportes', required: false }
             ],
             order: [['createdAt', 'ASC']]
         });
 
-        // promedio de votos
         const stats = await Valoracion.findAll({
             where: { id_publicacion: req.params.id },
             attributes: [
@@ -97,7 +158,6 @@ router.get('/:id', async (req, res) => {
             ]
         });
 
-        // verificar si el usuario ya voto
         let votoUsuario = null;
         if (req.session.id_usuario) {
             votoUsuario = await Valoracion.findOne({
@@ -110,18 +170,13 @@ router.get('/:id', async (req, res) => {
 
         const promedio = parseFloat(stats[0]?.dataValues?.promedio || 0);
         const cantidadVotos = parseInt(stats[0]?.dataValues?.cantidad || 0);
-
-        // contar reportes de esta publicacion
         const cantidadReportes = await reporte_publicacion.count({
             where: { id_publicacion: req.params.id }
         });
-
-        // contador me interesa
         const interesadosCount = await me_interesa.count({
             where: { id_publicacion: req.params.id }
         });
 
-        // verificar si el usuario ya marco 
         let yaInteresado = false;
         if (req.session.id_usuario) {
             const interes = await me_interesa.findOne({
@@ -133,10 +188,9 @@ router.get('/:id', async (req, res) => {
             yaInteresado = !!interes;
         }
 
-        // traer colecciones del usuario
         let misColecciones = [];
         if (req.session.id_usuario) {
-            misColecciones = await coleccion.findAll({  
+            misColecciones = await coleccion.findAll({
                 where: { id_usuario: req.session.id_usuario },
                 attributes: ['id', 'nombre'],
                 order: [['nombre', 'ASC']]
@@ -161,36 +215,51 @@ router.get('/:id', async (req, res) => {
 });
 
 // post comentario 
-router.post('/:id/comentario', async (req, res) => {
+router.post('/:id/comentario', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const { texto } = req.body;
         const id_usuario = req.session.id_usuario;
 
         if (!id_usuario) {
-            return res.redirect(`/publicaciones/${id}`);
+            return res.status(401).json({ error: 'No autorizado' });
         }
 
         if (!texto || texto.trim() === '') {
-            return res.redirect(`/publicaciones/${id}`);
+            return res.status(400).json({ error: 'El comentario no puede estar vacío' });
         }
 
-        await comentario.create({
+        const nuevoComentario = await comentario.create({
             texto: texto.trim(),
             id_usuario: id_usuario,
             id_publicacion: id
         });
 
-        req.flash('success', 'Comentario agregado correctamente');
-        res.redirect(`/publicaciones/${id}`);
+        // Obtener el usuario que comento
+        const usuario = await Usuario.findByPk(id_usuario, {
+            attributes: ['id', 'username']
+        });
+
+        // Formatear la fecha
+        const fecha = new Date(nuevoComentario.createdAt).toLocaleString();
+
+        res.json({
+            success: true,
+            comentario: {
+                id: nuevoComentario.id,
+                texto: nuevoComentario.texto,
+                usuario: usuario,
+                createdAt: fecha
+            }
+        });
 
     } catch (error) {
         console.error('Error al crear comentario:', error);
-        res.redirect(`/publicaciones/${req.params.id}`);
+        res.status(500).json({ error: 'Error al crear comentario' });
     }
 });
 
-// eliminar comentario (para el dueño de la publi)
+// eliminar comentario
 router.post('/eliminar/:id', authMiddleware, async (req, res) => {
     try {
         const comentarioItem = await comentario.findByPk(req.params.id, {
@@ -201,7 +270,6 @@ router.post('/eliminar/:id', authMiddleware, async (req, res) => {
             return res.redirect('back');
         }
 
-        // solo el dueño de la publi puede eliminar 
         if (comentarioItem.publicacion.id_usuario !== req.session.id_usuario) {
             return res.redirect('back');
         }
@@ -239,7 +307,6 @@ router.get('/:id/editar', async (req, res) => {
             publicacion,
             todasEtiquetas
         });
-
     } catch (error) {
         console.error(error);
         res.status(500).send("Error al cargar el formulario de edición");
@@ -271,7 +338,6 @@ router.post('/:id/actualizar', async (req, res) => {
         }
 
         res.redirect(`/publicaciones/${publicacion.id}`);
-
     } catch (error) {
         console.error(error);
         res.status(500).send("Error al actualizar");
@@ -293,7 +359,6 @@ router.post('/:id/eliminar', async (req, res) => {
 
         await publicacion.destroy();
         res.redirect('/perfil');
-
     } catch (error) {
         console.error(error);
         res.status(500).send("Error al eliminar la publicacion");

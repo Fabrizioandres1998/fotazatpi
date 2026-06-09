@@ -1,34 +1,52 @@
 nav.navbar.navbar-expand-lg.navbar-dark.bg-dark
-    .container
+    .container-fluid
         a.navbar-brand(href="/")
-            | Fotaza
-            i.bi.bi-camera-fill.ms-2
+            i.bi.bi-camera-fill
+            |  Fotaza
         button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav")
             span.navbar-toggler-icon
         .collapse.navbar-collapse(id="navbarNav")
-            ul.navbar-nav.ms-auto
+            ul.navbar-nav.me-auto.mb-2.mb-lg-0
                 if session && session.id_usuario
                     li.nav-item
-                        span.nav-link.text-success
-                            i.bi.bi-person-circle
-                            |  #{session.username}
+                        a.nav-link(href="/publicaciones")
+                            i.bi.bi-grid-3x3-gap-fill
+                            |  Inicio
+                    li.nav-item
+                        a.nav-link(href="/colecciones")
+                            i.bi.bi-bookmarks
+                            |  Colecciones
+                    li.nav-item
+                        a.nav-link(href="/publicaciones/feed")
+                            i.bi.bi-rss
+                            |  Feed
+                    li.nav-item
+                        a.nav-link(href="/perfil")
+                            i.bi.bi-person
+                            |  Perfil
+                    if session.rol === 'moderador'
+                        li.nav-item
+                            a.nav-link(href="/moderador/reportes")
+                                i.bi.bi-shield-shaded
+                                |  Mod
+            form(action="/publicaciones", method="GET", class="d-flex me-2")
+                input.form-control.form-control-sm(type="text", name="busqueda", placeholder="Buscar...", value=busqueda || '', style="width: 150px;")
+                button.btn.btn-outline-light.btn-sm(type="submit")
+                    i.bi.bi-search
+            ul.navbar-nav
+                if session && session.id_usuario
                     li.nav-item
                         a.nav-link(href="#" data-bs-toggle="modal" data-bs-target="#modalNotificaciones")
                             i.bi.bi-bell
                             if notificacionesNoLeidas > 0
                                 span.badge.bg-danger.ms-1= notificacionesNoLeidas
                     li.nav-item
-                        a.nav-link(href="/publicaciones") Publicaciones
+                        span.nav-link.text-success
+                            i.bi.bi-person-circle
+                            |  #{session.username}
                     li.nav-item
-                        a.nav-link(href="/colecciones") Mis colecciones
-                    li.nav-item
-                        a.nav-link(href="/perfil") Mi Perfil
-                    if session.rol === 'moderador'
-                        li.nav-item
-                            a.nav-link(href="/moderador/reportes" class="moderador-link") Panel Moderador
-                    li.nav-item
-                        form(action="/logout" method="POST")
-                            button.btn.btn-link.nav-link(type="submit") Cerrar sesión
+                        form(action="/logout", method="POST", class="d-inline")
+                            button.btn.btn-link.nav-link(type="submit") Salir
                 else
                     li.nav-item
                         a.nav-link(href="/login") Iniciar sesión

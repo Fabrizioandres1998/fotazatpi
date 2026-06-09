@@ -90,18 +90,12 @@ block content
                         i.bi.bi-flag
                         |  Reportar publicación
 
-            // BOTÓN ME INTERESA
+            // BOTÓN ME INTERESA (con AJAX)
             if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
                 .mt-3
-                    form(action=`/me-interesa/publicacion/${publicacion.id}`, method="POST" class="d-inline")
-                        if yaInteresado
-                            button.btn.btn-outline-secondary.btn-sm(type="submit")
-                                i.bi.bi-hand-thumbs-down
-                                |  No me interesa
-                        else
-                            button.btn.btn-outline-success.btn-sm(type="submit")
-                                i.bi.bi-hand-thumbs-up
-                                |  Me interesa
+                    button.btn.btn-sm(id="btnMeInteresa" data-id=publicacion.id class=yaInteresado ? 'btn-outline-secondary' : 'btn-outline-success')
+                        i.bi.bi-hand-thumbs-up
+                        |  #{yaInteresado ? 'No me interesa' : 'Me interesa'}
                     span.ms-2.text-muted(id=`interesados-${publicacion.id}`) 
                         | #{interesadosCount || 0} interesados
 
@@ -129,39 +123,42 @@ block content
                 .col-12
                     hr
                     h3 Comentarios
-
-                    if comentarios && comentarios.length > 0
-                        each comentario in comentarios
-                            .card.mb-2
-                                .card-body
-                                    .d-flex.justify-content-between.align-items-start
-                                        div
-                                            a(href=`/perfil/${comentario.usuario.username}`) 
-                                                strong #{comentario.usuario ? comentario.usuario.username : 'Usuario desconocido'}
-                                            p.card-text.mt-2= comentario.texto
-                                            small.text-muted= comentario.createdAt
-                                        div
-                                            if session && session.id_usuario && comentario.id_usuario !== session.id_usuario
-                                                button.btn.btn-sm.btn-outline-danger(type="button" data-bs-toggle="modal" data-bs-target="#modalReporteComentario" data-id=comentario.id)
-                                                    i.bi.bi-flag
-                                                    |  Reportar
-                                            if session && session.id_usuario && publicacion.id_usuario === session.id_usuario && comentario.reportes && comentario.reportes.length > 0
-                                                form(action=`/publicaciones/eliminar/${comentario.id}`, method="POST" class="d-inline ms-2" onsubmit="return confirm('¿Eliminar este comentario?')")
-                                                    button.btn.btn-sm.btn-danger(type="submit")
-                                                        i.bi.bi-trash
-                                                        |  Eliminar (#{comentario.reportes.length} reportes)
-                    else
-                        .alert.alert-secondary
-                            p.mb-0 No hay comentarios aún. ¡Sé el primero en comentar!
+                    .mb-3(id="comentariosContainer")
+                        if comentarios && comentarios.length > 0
+                            each comentario in comentarios
+                                .card.mb-2(id=`comentario-${comentario.id}`)
+                                    .card-body
+                                        .d-flex.justify-content-between.align-items-start
+                                            div
+                                                if comentario.usuario
+                                                    a(href=`/perfil/${comentario.usuario.username}`) 
+                                                        strong #{comentario.usuario.username}
+                                                else
+                                                    strong Usuario desconocido
+                                                p.card-text.mt-2= comentario.texto
+                                                small.text-muted= comentario.createdAt
+                                            div
+                                                if session && session.id_usuario && comentario.id_usuario !== session.id_usuario
+                                                    button.btn.btn-sm.btn-outline-danger(type="button" data-bs-toggle="modal" data-bs-target="#modalReporteComentario" data-id=comentario.id)
+                                                        i.bi.bi-flag
+                                                        |  Reportar
+                                                if session && session.id_usuario && publicacion.id_usuario === session.id_usuario && comentario.reportes && comentario.reportes.length > 0
+                                                    form(action=`/publicaciones/eliminar/${comentario.id}`, method="POST" class="d-inline ms-2" onsubmit="return confirm('¿Eliminar este comentario?')")
+                                                        button.btn.btn-sm.btn-danger(type="submit")
+                                                            i.bi.bi-trash
+                                                            |  Eliminar (#{comentario.reportes.length} reportes)
+                        else
+                            .alert.alert-secondary
+                                p.mb-0(id="noComentariosMsg") No hay comentarios aún. ¡Sé el primero en comentar!
 
                     if session && session.id_usuario
                         .card.mt-3
                             .card-header
                                 strong Agregar comentario
                             .card-body
-                                form(action=`/publicaciones/${publicacion.id}/comentario`, method="POST")
+                                form(id="formComentario")
                                     .mb-3
-                                        textarea.form-control(name="texto" rows="3" placeholder="Escribe tu comentario...", required)
+                                        textarea.form-control(id="comentarioTexto" rows="3" placeholder="Escribe tu comentario...", required)
                                     button.btn.btn-primary(type="submit") Comentar
                     else
                         .alert.alert-info.mt-3
@@ -169,7 +166,7 @@ block content
                                 a(href="/login") Inicia sesión
                                 |  para comentar
 
-            // MODAL DE REPORTE PUBLICACION (dentro del if publicacion)
+            // MODAL DE REPORTE PUBLICACION
             if session && session.id_usuario && publicacion.id_usuario !== session.id_usuario
                 .modal.fade(id="modalReporte" tabindex="-1")
                     .modal-dialog
@@ -195,7 +192,7 @@ block content
                                         button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancelar
                                         button.btn.btn-danger(type="submit") Enviar reporte
 
-            // MODAL DE REPORTE COMENTARIO (dentro del if publicacion)
+            // MODAL DE REPORTE COMENTARIO
             if session && session.id_usuario
                 .modal.fade(id="modalReporteComentario" tabindex="-1")
                     .modal-dialog
@@ -225,7 +222,7 @@ block content
                 p Publicación no encontrada
 
     script.
-        // Reportar comentario
+        // reportar comentario
         const modalReporteComentario = document.getElementById('modalReporteComentario');
         if (modalReporteComentario) {
             modalReporteComentario.addEventListener('show.bs.modal', function(event) {
@@ -235,5 +232,85 @@ block content
                 const form = document.getElementById('formReporteComentario');
                 form.action = `/reportes/comentario/${comentarioId}`;
                 console.log('Form action actualizado a:', form.action);
+            });
+        }
+
+        // Me interesa AJAX
+        const btnMeInteresa = document.getElementById('btnMeInteresa');
+        if (btnMeInteresa) {
+            btnMeInteresa.addEventListener('click', async function() {
+                const publicacionId = this.dataset.id;
+                const spanInteresados = document.getElementById(`interesados-${publicacionId}`);
+
+                try {
+                    const response = await fetch(`/me-interesa/publicacion/${publicacionId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        spanInteresados.innerHTML = `${data.cantidad} interesados`;
+                        if (data.yaInteresado) {
+                            this.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> No me interesa';
+                            this.classList.remove('btn-outline-success');
+                            this.classList.add('btn-outline-secondary');
+                        } else {
+                            this.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> Me interesa';
+                            this.classList.remove('btn-outline-secondary');
+                            this.classList.add('btn-outline-success');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al procesar la solicitud');
+                }
+            });
+        }
+
+        // Comentarios con ajax
+        const formComentario = document.getElementById('formComentario');
+        if (formComentario) {
+            formComentario.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const texto = document.getElementById('comentarioTexto').value;
+                const publicacionId = #{publicacion.id};
+
+                if (!texto.trim()) {
+                    alert('Escribe un comentario');
+                    return;
+                }
+
+                const btnSubmit = this.querySelector('button[type="submit"]');
+                const textoOriginal = btnSubmit.innerHTML;
+                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
+                btnSubmit.disabled = true;
+
+                try {
+                    const response = await fetch(`/publicaciones/${publicacionId}/comentario`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ texto: texto })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        document.getElementById('comentarioTexto').value = '';
+                        const noComentariosMsg = document.getElementById('noComentariosMsg');
+                        if (noComentariosMsg) {
+                            noComentariosMsg.style.display = 'none';
+                        }
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Error al enviar comentario');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al enviar comentario');
+                } finally {
+                    btnSubmit.innerHTML = textoOriginal;
+                    btnSubmit.disabled = false;
+                }
             });
         }

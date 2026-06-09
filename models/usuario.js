@@ -29,15 +29,29 @@ module.exports = (sequelize, DataTypes) => {
   }
 
   Usuario.init({
-    username: DataTypes.STRING,
-    email: DataTypes.STRING,
-    password_hash: DataTypes.STRING,
+    username: {
+      type: DataTypes.STRING,
+      unique: true,  
+      allowNull: false
+    },
+    email: {
+      type: DataTypes.STRING,
+      unique: true, 
+      allowNull: false
+    },
+    password_hash: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     activo: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
       allowNull: false
     },
-    rol: DataTypes.STRING,
+    rol: {
+      type: DataTypes.STRING,
+      defaultValue: 'usuario'
+    },
     publicaciones_eliminadas: {
       type: DataTypes.INTEGER,
       defaultValue: 0

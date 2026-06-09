@@ -2,32 +2,13 @@ extends layout
 
 block content
     .container.mt-4
-        h1.mb-4 Publicaciones
-
-        if busqueda
+        h1.mb-4 Publicaciones de usuarios a los que sigo
+        
+        if mensaje
             .alert.alert-info
-                | Resultados para: "#{busqueda}"
-                a.ms-3(href="/publicaciones") Limpiar búsqueda
-
-        if filtro
-            .alert.alert-info
-                | Publicaciones con la etiqueta: #{filtro}
-                a.ms-3(href="/publicaciones") Ver todas
-
-        // Mostrar usuarios encontrados
-        if usuarios && usuarios.length > 0
-            .card.mb-4
-                .card-header
-                    h5.mb-0 Usuarios encontrados
-                .card-body
-                    .row
-                        each usuario in usuarios
-                            .col-md-4.mb-2
-                                a(href=`/perfil/${usuario.username}`) 
-                                    i.bi.bi-person-circle
-                                    |  #{usuario.username}
-
-        // Mostrar publicaciones
+                p= mensaje
+                a.btn.btn-primary.mt-2(href="/publicaciones") Explorar publicaciones
+        
         if publicaciones && publicaciones.length > 0
             .row
                 each pub in publicaciones
@@ -38,29 +19,25 @@ block content
                             else
                                 .card-img-top.bg-secondary.d-flex.align-items-center.justify-content-center(style="height: 200px;")
                                     span.text-white Sin imagen
-
+                            
                             .card-body
                                 h5.card-title= pub.titulo
                                 p.card-text.text-muted= pub.descripcion.substring(0, 100)
-
+                                
                                 if pub.etiquetas && pub.etiquetas.length
                                     .mb-2
                                         each etiq in pub.etiquetas
                                             a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
-
+                                
                                 if pub.Usuario
                                     small.text-muted
                                         a(href=`/perfil/${pub.Usuario.username}`)
                                             i.bi.bi-person
                                             |  #{pub.Usuario.username}
-
+                            
                             .card-footer.bg-transparent
                                 a.btn.btn-sm.btn-outline-primary(href=`/publicaciones/${pub.id}`) Ver más
-        else if !usuarios || usuarios.length === 0
-            .alert.alert-info
-                if busqueda
-                    p No se encontraron publicaciones ni usuarios que coincidan con "#{busqueda}"
-                else if filtro
-                    p No hay publicaciones con la etiqueta "#{filtro}"
-                else
-                    p No hay publicaciones disponibles
+        else if !mensaje
+            .alert.alert-warning
+                p No hay publicaciones de los usuarios que sigues.
+                a.btn.btn-primary.mt-2(href="/publicaciones") Explorar publicaciones
