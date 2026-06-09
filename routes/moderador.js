@@ -75,13 +75,12 @@ router.get('/reportes/publicacion/:id', async (req, res) => {
     }
 });
 
-// Dar de baja publicacion
+// Dar de baja publicacion 
 router.post('/reportes/publicacion/:id/eliminar', async (req, res) => {
     try {
         const publicacion = await Publicacion.findByPk(req.params.id);
         if (!publicacion) {
-            req.flash('error', 'Publicación no encontrada');
-            return res.redirect('/moderador/reportes');
+            return res.status(404).json({ error: 'Publicación no encontrada' });
         }
 
         const id_usuario = publicacion.id_usuario;
@@ -97,6 +96,8 @@ router.post('/reportes/publicacion/:id/eliminar', async (req, res) => {
 
         // incrementar contador de publicaciones eliminadas del usuario
         const usuario = await Usuario.findByPk(id_usuario);
+        let mensaje = '';
+
         if (usuario) {
             const nuevasEliminadas = (usuario.publicaciones_eliminadas || 0) + 1;
             await usuario.update({
@@ -106,22 +107,37 @@ router.post('/reportes/publicacion/:id/eliminar', async (req, res) => {
             // si llega a 3, inactivar cuenta
             if (nuevasEliminadas >= 3) {
                 await usuario.update({ activo: false });
-                req.flash('warning', `El usuario ${usuario.username} ha sido INACTIVADO por acumular 3 publicaciones eliminadas`);
+                mensaje = `Publicación eliminada. El usuario ${usuario.username} ha sido INACTIVADO por acumular 3 publicaciones eliminadas`;
             } else {
-                req.flash('info', `El usuario ${usuario.username} tiene ${nuevasEliminadas}/3 publicaciones eliminadas`);
+                mensaje = `Publicación eliminada. El usuario ${usuario.username} tiene ${nuevasEliminadas}/3 publicaciones eliminadas`;
             }
+        } else {
+            mensaje = 'Publicación eliminada correctamente';
         }
 
-        req.flash('success', 'Publicación eliminada correctamente');
-        res.redirect('/moderador/reportes');
+        res.json({ success: true, message: mensaje });
 
     } catch (error) {
         console.error(error);
-        req.flash('error', 'Error al eliminar la publicación');
-        res.redirect('/moderador/reportes');
+        res.status(500).json({ error: 'Error al eliminar la publicación' });
     }
 });
 
+// desestimar reportes 
+router.post('/reportes/publicacion/:id/desestimar', async (req, res) => {
+    try {
+        await reporte_publicacion.update(
+            { estado: 'revisado' },
+            { where: { id_publicacion: req.params.id } }
+        );
+
+        res.json({ success: true, message: 'Reportes desestimados correctamente' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al desestimar los reportes' });
+    }
+});
 // eesestimar reportes 
 router.post('/reportes/publicacion/:id/desestimar', async (req, res) => {
     try {

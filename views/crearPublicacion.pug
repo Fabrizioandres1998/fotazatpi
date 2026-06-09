@@ -1,50 +1,121 @@
 extends layout
 
 block content
-    form.row.g-3(method="POST" action="/publicaciones/crear")
-        .col-12
-            label.form-label(for="inputTitulo") Título
-            input.form-control(type="text" id="inputTitulo" name="titulo" placeholder="Título de la publicación", required)
+    .container.mt-5
+        .row.justify-content-center
+            .col-md-8.col-lg-7
+                .card.shadow-sm.border-0.rounded-4
+                    .card-header.bg-white.border-0.pt-4.pb-0
+                        h2.text-center.mb-0.fw-bold.text-primary 
+                            i.bi.bi-image.me-2
+                            | Nueva Publicación
+                        p.text-center.text-muted.mt-2 Comparte tus imágenes con la comunidad Fotaza
 
-        .col-12
-            label.form-label(for="inputDescripcion") Descripción
-            textarea.form-control(id="inputDescripcion" name="descripcion" rows="5" placeholder="Escribe aquí el contenido de tu publicación...", required)
+                    .card-body.p-4
+                        form(method="POST" action="/publicaciones/crear")
+                            // titulo
+                            .mb-4
+                                label.form-label.fw-semibold(for="inputTitulo")
+                                    i.bi.bi-pencil-square.me-1
+                                    | Título
+                                input.form-control.form-control-lg.bg-light.border-0.rounded-3(
+                                    type="text" 
+                                    id="inputTitulo" 
+                                    name="titulo" 
+                                    placeholder="Ej: Postales de San Luis"
+                                    required
+                                )
 
-        .col-12
-            label.form-label(for="inputUrl") URL de la imagen 1
-            input.form-control(type="url" id="inputUrl" name="url" placeholder="https://ejemplo.com/imagen1.jpg")
+                            // descripcion
+                            .mb-4
+                                label.form-label.fw-semibold(for="inputDescripcion")
+                                    i.bi.bi-text-paragraph.me-1
+                                    | Descripción
+                                textarea.form-control.bg-light.border-0.rounded-3(
+                                    id="inputDescripcion" 
+                                    name="descripcion" 
+                                    rows="4" 
+                                    placeholder="Describe tu publicación..."
+                                    required
+                                )
 
-        .col-12
-            label.form-label(for="inputUrl1") URL de la imagen 2
-            input.form-control(type="url" id="inputUrl1" name="url1" placeholder="https://ejemplo.com/imagen2.jpg")
+                            // URLs de imagenes
+                            .mb-3
+                                label.form-label.fw-semibold
+                                    i.bi.bi-images.me-1
+                                    | Imágenes
+                                .card.bg-light.border-0.rounded-3.p-3
+                                    .mb-3
+                                        label.form-label.small.text-muted Imagen 1
+                                        input.form-control.form-control-sm.bg-white(
+                                            type="url" 
+                                            name="url" 
+                                            placeholder="https://ejemplo.com/imagen1.jpg"
+                                        )
+                                    .mb-3
+                                        label.form-label.small.text-muted Imagen 2 (opcional)
+                                        input.form-control.form-control-sm.bg-white(
+                                            type="url" 
+                                            name="url1" 
+                                            placeholder="https://ejemplo.com/imagen2.jpg"
+                                        )
+                                    .mb-0
+                                        label.form-label.small.text-muted Imagen 3 (opcional)
+                                        input.form-control.form-control-sm.bg-white(
+                                            type="url" 
+                                            name="url2" 
+                                            placeholder="https://ejemplo.com/imagen3.jpg"
+                                        )
 
-        .col-12
-            label.form-label(for="inputUrl2") URL de la imagen 3
-            input.form-control(type="url" id="inputUrl2" name="url2" placeholder="https://ejemplo.com/imagen3.jpg")
+                            // lic
+                            .mb-3
+                                label.form-label.fw-semibold(for="inputLicencia")
+                                    i.bi.bi-shield-check.me-1
+                                    | Tipo de licencia
+                                select.form-select.bg-light.border-0.rounded-3(
+                                    id="inputLicencia" 
+                                    name="licencia" 
+                                    required
+                                )
+                                    option(value="") Selecciona una opción
+                                    option(value="copyright") 🔒 Copyright - Todos los derechos reservados
+                                    option(value="sin_copyright") 🌍 Sin copyright - Dominio público
 
-        .col-12
-            label.form-label(for="inputLicencia") Tipo de licencia
-            select.form-control(id="inputLicencia" name="licencia" required)
-                option(value="") Selecciona...
-                option(value="copyright") Copyright (todos los derechos reservados)
-                option(value="sin_copyright") Sin copyright (dominio público / libre)
+                            // Marca de agua (condicional)
+                            .mb-3(id="campoMarcaAgua" style="display: none;")
+                                label.form-label.fw-semibold(for="inputMarcaAgua")
+                                    i.bi.bi-water.me-1
+                                    | Marca de agua
+                                input.form-control.bg-light.border-0.rounded-3(
+                                    type="text" 
+                                    id="inputMarcaAgua" 
+                                    name="marca_agua" 
+                                    placeholder="Ej: © Fotaza 2024"
+                                )
+                                .form-text.text-muted Opcional - Solo para imágenes con copyright
 
-        .col-12(id="campoMarcaAgua" style="display: none;")
-            label.form-label(for="inputMarcaAgua") Marca de agua
-            input.form-control(type="text" id="inputMarcaAgua" name="marca_agua" placeholder="Ej: © MiEmpresa 2024")
+                            // Etiquetas
+                            .mb-4
+                                label.form-label.fw-semibold(for="inputEtiquetas")
+                                    i.bi.bi-tags.me-1
+                                    | Etiquetas
+                                input.form-control.bg-light.border-0.rounded-3(
+                                    type="text" 
+                                    id="inputEtiquetas" 
+                                    name="etiquetas" 
+                                    placeholder="paisaje, cine, videojuegos"
+                                )
+                                .form-text.text-muted Separa las etiquetas con comas
 
-        .col-12
-            label.form-label(for="inputEtiquetas") Etiquetas
-            input.form-control(
-                type="text" 
-                id="inputEtiquetas" 
-                name="etiquetas" 
-                placeholder="paisaje, noche, urbano, naturaleza..."
-            )
-            .help-text Separa las etiquetas con comas (ej: tecnologia, programacion, web)
-
-        .col-12
-            button.btn.btn-primary(type="submit") Publicar       
+                            // Botones
+                            hr
+                            .d-flex.gap-3.justify-content-end
+                                a.btn.btn-outline-secondary.rounded-pill.px-4(href="/publicaciones")
+                                    i.bi.bi-x-circle.me-1
+                                    | Cancelar
+                                button.btn.btn-primary.rounded-pill.px-4(type="submit")
+                                    i.bi.bi-cloud-arrow-up.me-1
+                                    | Publicar
 
     script.
         const licenciaSelect = document.getElementById('inputLicencia');

@@ -47,8 +47,150 @@ block content
             .col-12
                 hr
                 .d-flex.gap-3
-                    form(action=`/moderador/reportes/publicacion/${publicacion.id}/eliminar`, method="POST", onsubmit="return confirm('¿Eliminar esta publicación definitivamente?')")
-                        button.btn.btn-danger(type="submit") Dar de baja publicación
+                    button.btn.btn-danger(type="button" data-bs-toggle="modal" data-bs-target="#modalEliminar") Dar de baja publicación
                     
-                    form(action=`/moderador/reportes/publicacion/${publicacion.id}/desestimar`, method="POST")
+                    form(action=`/moderador/reportes/publicacion/${publicacion.id}/desestimar`, method="POST", id="formDesestimar")
                         button.btn.btn-secondary(type="submit") Desestimar reportes
+
+    // MODAL CONFIRMAR ELIMINAR
+    .modal.fade(id="modalEliminar" tabindex="-1" aria-hidden="true")
+        .modal-dialog
+            .modal-content
+                .modal-header
+                    h5.modal-title Confirmar eliminación
+                    button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+                .modal-body
+                    p ¿Estás seguro de eliminar esta publicación?
+                    p.text-danger Esta acción no se puede deshacer.
+                    if publicacion.Usuario
+                        p 
+                            strong Usuario: 
+                            | #{publicacion.Usuario.username}
+                        p 
+                            strong Publicación: 
+                            | #{publicacion.titulo}
+                .modal-footer
+                    button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancelar
+                    button.btn.btn-danger(type="button" id="btnConfirmarEliminar") Sí, eliminar publicación
+
+    // MODAL CONFIRMAR DESESTIMAR
+    .modal.fade(id="modalDesestimar" tabindex="-1" aria-hidden="true")
+        .modal-dialog
+            .modal-content
+                .modal-header
+                    h5.modal-title Confirmar acción
+                    button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+                .modal-body
+                    p ¿Estás seguro de desestimar todos los reportes de esta publicación?
+                    p La publicación seguirá visible en la plataforma.
+                .modal-footer
+                    button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancelar
+                    button.btn.btn-warning(type="button" id="btnConfirmarDesestimar") Sí, desestimar reportes
+
+    // CONTENEDOR PARA MENSAJES
+    div(id="mensajeContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;")
+
+    script.
+        // funcion para mostrar mensajes
+        const mostrarMensaje = (mensaje, tipo) => {
+            const container = document.getElementById('mensajeContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            container.appendChild(alertDiv);
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        };
+
+        // eliminar publicacion con ajax
+        const btnEliminar = document.getElementById('btnConfirmarEliminar');
+        if (btnEliminar) {
+            btnEliminar.addEventListener('click', async function() {
+                const publicacionId = #{publicacion.id};
+                
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Eliminando...';
+                
+                try {
+                    const response = await fetch(`/moderador/reportes/publicacion/${publicacionId}/eliminar`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        mostrarMensaje(data.message, 'success');
+                        setTimeout(() => {
+                            window.location.href = '/moderador/reportes';
+                        }, 1500);
+                    } else {
+                        mostrarMensaje(data.error || 'Error al eliminar', 'danger');
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalEliminar'));
+                        if (modal) modal.hide();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    mostrarMensaje('Error al eliminar la publicación', 'danger');
+                } finally {
+                    this.disabled = false;
+                    this.innerHTML = 'Sí, eliminar publicación';
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalEliminar'));
+                    if (modal) modal.hide();
+                }
+            });
+        }
+
+        // desestimar reportes con ajax
+        const btnDesestimar = document.getElementById('btnConfirmarDesestimar');
+        if (btnDesestimar) {
+            btnDesestimar.addEventListener('click', async function() {
+                const publicacionId = #{publicacion.id};
+                
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
+                
+                try {
+                    const response = await fetch(`/moderador/reportes/publicacion/${publicacionId}/desestimar`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        mostrarMensaje(data.message, 'success');
+                        setTimeout(() => {
+                            window.location.href = '/moderador/reportes';
+                        }, 1500);
+                    } else {
+                        mostrarMensaje(data.error || 'Error al desestimar', 'danger');
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalDesestimar'));
+                        if (modal) modal.hide();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    mostrarMensaje('Error al desestimar los reportes', 'danger');
+                } finally {
+                    this.disabled = false;
+                    this.innerHTML = 'Sí, desestimar reportes';
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalDesestimar'));
+                    if (modal) modal.hide();
+                }
+            });
+        }
+
+        // abrir modal de desestimar
+        const formDesestimar = document.getElementById('formDesestimar');
+        if (formDesestimar) {
+            formDesestimar.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const modalElement = document.getElementById('modalDesestimar');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            });
+        }

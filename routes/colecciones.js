@@ -94,7 +94,7 @@ router.post('/:id/agregar/:id_publicacion', authMiddleware, async (req, res) => 
         });
 
         if (!coleccionItem) {
-            return res.redirect('back');
+            return res.status(404).json({ error: 'Coleccion no encontrada' });
         }
 
         const existe = await coleccion_publicacion.findOne({
@@ -102,7 +102,7 @@ router.post('/:id/agregar/:id_publicacion', authMiddleware, async (req, res) => 
         });
 
         if (existe) {
-            return res.redirect('back');
+            return res.status(400).json({ error: `La publicacion ya esta en "${coleccionItem.nombre}"` });
         }
 
         await coleccion_publicacion.create({
@@ -110,10 +110,15 @@ router.post('/:id/agregar/:id_publicacion', authMiddleware, async (req, res) => 
             id_publicacion
         });
 
-        res.redirect('back');
+        res.json({ 
+            success: true, 
+            message: `Publicacion agregada a "${coleccionItem.nombre}"`,
+            coleccion: coleccionItem.nombre
+        });
+
     } catch (error) {
         console.error(error);
-        res.redirect('back');
+        res.status(500).json({ error: 'Error al agregar a la coleccion' });
     }
 });
 

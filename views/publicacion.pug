@@ -96,7 +96,7 @@ block content
                     span.ms-2.text-muted(id=`interesados-${publicacion.id}`) 
                         | #{interesadosCount || 0} interesados
 
-            // GUARDAR EN COLECCION
+            // GUARDAR EN COLECCION - VERSION AJAX
             if session && session.id_usuario && misColecciones
                 .mt-3
                     .dropdown
@@ -106,8 +106,9 @@ block content
                         ul.dropdown-menu
                             each coleccionItem in misColecciones
                                 li
-                                    form(action=`/colecciones/${coleccionItem.id}/agregar/${publicacion.id}`, method="POST")
-                                        button.dropdown-item(type="submit") #{coleccionItem.nombre}
+                                    button.dropdown-item.guardar-coleccion(type="button" data-id=publicacion.id data-coleccion-id=coleccionItem.id data-coleccion-nombre=coleccionItem.nombre)
+                                        i.bi.bi-bookmark
+                                        |  #{coleccionItem.nombre}
                             li
                                 hr.dropdown-divider
                             li
@@ -219,6 +220,19 @@ block content
                                         button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancelar
                                         button.btn.btn-danger(type="submit") Enviar reporte
 
+                // MODAL DE CONFIRMACION
+                .modal.fade(id="modalConfirmacion" tabindex="-1" aria-hidden="true")
+                    .modal-dialog.modal-sm
+                        .modal-content
+                            .modal-header
+                                h5.modal-title Confirmar accion
+                                button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+                            .modal-body
+                                p(id="confirmacionMensaje") ¿Estas seguro de eliminar este comentario?
+                            .modal-footer
+                                button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancelar
+                                button.btn.btn-danger(type="button" id="btnConfirmarAccion") Eliminar
+
     script.
         // cerrar modal reporte comentario
         const cerrarModalComentario = () => {
@@ -297,7 +311,7 @@ block content
                 const action = this.action;
                 const motivo = document.getElementById('motivo_comentario').value;
                 const descripcion = document.getElementById('descripcion_comentario').value;
-                
+
                 const errorDiv = document.getElementById('reporteComentarioError');
                 errorDiv.style.display = 'none';
                 errorDiv.innerHTML = '';
@@ -324,7 +338,7 @@ block content
                         const modalBody = document.querySelector('#modalReporteComentario .modal-body');
                         const form = document.getElementById('formReporteComentario');
                         modalBody.insertBefore(successDiv, form);
-                        
+
                         // cerrar modal 
                         setTimeout(() => {
                             cerrarModalComentario();
@@ -395,7 +409,7 @@ block content
                         const modalBody = document.querySelector('#modalReporte .modal-body');
                         const form = document.getElementById('formReportePublicacion');
                         modalBody.insertBefore(successDiv, form);
-                        
+
                         // actualizar contador de reportes
                         const contadorReportes = document.querySelector('.text-muted small');
                         if (contadorReportes && contadorReportes.textContent.includes('Reportes:')) {
@@ -405,7 +419,7 @@ block content
                                 contadorReportes.textContent = `Reportes: ${reportesActual + 1}/3`;
                             }
                         }
-                        
+
                         // Cerrar modal  
                         setTimeout(() => {
                             cerrarModalPublicacion();
@@ -534,42 +548,116 @@ block content
             });
         }
 
-        // eliminar comentario ajax
-        document.querySelectorAll('.eliminar-comentario').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const comentarioId = this.dataset.id;
-                if (!confirm('¿Eliminar este comentario?')) return;
+        // MODAL DE CONFIRMACION ELIMINAR
+        let accionConfirmada = null;
 
-                const textoOriginal = this.innerHTML;
-                this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-                this.disabled = true;
+        // mostrar modal de confirmacion
+        const mostrarConfirmacion = (mensaje, callback) => {
+            const modalElement = document.getElementById('modalConfirmacion');
+            const mensajeElement = document.getElementById('confirmacionMensaje');
+            if (mensajeElement) mensajeElement.textContent = mensaje;
 
-                try {
-                    const response = await fetch('/publicaciones/eliminar/' + comentarioId, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
+            const modal = new bootstrap.Modal(modalElement);
+            accionConfirmada = callback;
+            modal.show();
+        };
 
-                    const data = await response.json();
-
-                    if (data.success) {
-                        const comentarioDiv = document.getElementById('comentario-' + comentarioId);
-                        if (comentarioDiv) comentarioDiv.remove();
-
-                        const container = document.getElementById('comentariosContainer');
-                        if (container && container.children.length === 0) {
-                            container.innerHTML = '<div class="alert alert-secondary"><p class="mb-0" id="noComentariosMsg">No hay comentarios aun. ¡Se el primero en comentar!</p></div>';
-                        }
-                        mostrarMensaje('comentariosContainer', 'Comentario eliminado correctamente', 'success');
-                    } else {
-                        mostrarMensaje('comentariosContainer', data.error || 'Error al eliminar comentario', 'danger');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    mostrarMensaje('comentariosContainer', 'Error al eliminar comentario', 'danger');
-                } finally {
-                    this.innerHTML = textoOriginal;
-                    this.disabled = false;
+        // evento del boton confirmar
+        const btnConfirmar = document.getElementById('btnConfirmarAccion');
+        if (btnConfirmar) {
+            btnConfirmar.addEventListener('click', async function() {
+                if (accionConfirmada) {
+                    await accionConfirmada();
+                    accionConfirmada = null;
                 }
+                const modalElement = document.getElementById('modalConfirmacion');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) modal.hide();
+            });
+        }
+
+        // eliminar comentario con confirmacion 
+        document.querySelectorAll('.eliminar-comentario').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const comentarioId = this.dataset.id;
+                const boton = this;
+
+                mostrarConfirmacion('¿Eliminar este comentario? Esta accion no se puede deshacer.', async () => {
+                    const textoOriginal = boton.innerHTML;
+                    boton.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                    boton.disabled = true;
+
+                    try {
+                        const response = await fetch('/publicaciones/eliminar/' + comentarioId, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            const comentarioDiv = document.getElementById('comentario-' + comentarioId);
+                            if (comentarioDiv) comentarioDiv.remove();
+
+                            const container = document.getElementById('comentariosContainer');
+                            if (container && container.children.length === 0) {
+                                container.innerHTML = '<div class="alert alert-secondary"><p class="mb-0" id="noComentariosMsg">No hay comentarios aun. ¡Se el primero en comentar!</p></div>';
+                            }
+                            mostrarMensaje('comentariosContainer', 'Comentario eliminado correctamente', 'success');
+                        } else {
+                            mostrarMensaje('comentariosContainer', data.error || 'Error al eliminar comentario', 'danger');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        mostrarMensaje('comentariosContainer', 'Error al eliminar comentario', 'danger');
+                    } finally {
+                        boton.innerHTML = textoOriginal;
+                        boton.disabled = false;
+                    }
+                });
             });
         });
+        // guardar en coleccion ajax
+        const botonesGuardarColeccion = document.querySelectorAll('.guardar-coleccion');
+        if (botonesGuardarColeccion.length > 0) {
+            botonesGuardarColeccion.forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const publicacionId = this.dataset.id;
+                    const coleccionId = this.dataset.coleccionId;
+                    const coleccionNombre = this.dataset.coleccionNombre;
+
+                    const textoOriginal = this.innerHTML;
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                    this.disabled = true;
+
+                    try {
+                        const response = await fetch(`/colecciones/${coleccionId}/agregar/${publicacionId}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            mostrarMensaje('votosAlert', data.message, 'success');
+                            // cerrar el dropdown
+                            const dropdown = document.querySelector('.dropdown.show');
+                            if (dropdown) {
+                                const dropdownToggle = dropdown.querySelector('.dropdown-toggle');
+                                if (dropdownToggle) {
+                                    bootstrap.Dropdown.getInstance(dropdownToggle)?.hide();
+                                }
+                            }
+                        } else {
+                            mostrarMensaje('votosAlert', data.error || 'Error al guardar en coleccion', 'danger');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        mostrarMensaje('votosAlert', 'Error al guardar en coleccion', 'danger');
+                    } finally {
+                        this.innerHTML = textoOriginal;
+                        this.disabled = false;
+                    }
+                });
+            });
+        }

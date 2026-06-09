@@ -1,29 +1,72 @@
 extends layout
 
 block content
-    .container.mt-4
-        h1 Editar Publicación
+    .container.mt-5
+        .row.justify-content-center
+            .col-md-8.col-lg-7
+                .card.shadow-sm.border-0.rounded-4
+                    .card-header.bg-white.border-0.pt-4.pb-0
+                        h2.text-center.mb-0.fw-bold.text-warning
+                            i.bi.bi-pencil-square.me-2
+                            | Editar Publicacion
+                        p.text-center.text-muted.mt-2 Modifica los datos de tu publicacion
 
-        form(method="POST" action=`/publicaciones/${publicacion.id}/actualizar`)
-            div
-                label Título:
-                input(type="text" name="titulo" value=publicacion.titulo required)
+                    .card-body.p-4
+                        form(method="POST" action=`/publicaciones/${publicacion.id}/actualizar`)
+                            // Titulo
+                            .mb-4
+                                label.form-label.fw-semibold(for="inputTitulo")
+                                    i.bi.bi-pencil-square.me-1
+                                    | Titulo
+                                input.form-control.form-control-lg.bg-light.border-0.rounded-3(
+                                    type="text" 
+                                    id="inputTitulo" 
+                                    name="titulo" 
+                                    value=publicacion.titulo 
+                                    required
+                                )
 
-            div
-                label Descripción:
-                textarea(name="descripcion" rows="5")= publicacion.descripcion
+                            // Descripcion
+                            .mb-4
+                                label.form-label.fw-semibold(for="inputDescripcion")
+                                    i.bi.bi-text-paragraph.me-1
+                                    | Descripcion
+                                textarea.form-control.bg-light.border-0.rounded-3(
+                                    id="inputDescripcion" 
+                                    name="descripcion" 
+                                    rows="5" 
+                                    required
+                                )= publicacion.descripcion
 
-            div
-                label Etiquetas:
-                each etiqueta in todasEtiquetas
-                    label
-                        input(
-                            type="checkbox"
-                            name="etiquetas"
-                            value=etiqueta.id
-                            checked=(publicacion.etiquetas && publicacion.etiquetas.some(e => e.id === etiqueta.id))
-                        )
-                        | #{etiqueta.nombre}
+                            // Etiquetas
+                            .mb-4
+                                label.form-label.fw-semibold
+                                    i.bi.bi-tags.me-1
+                                    | Etiquetas
+                                .card.bg-light.border-0.rounded-3.p-3
+                                    .row
+                                        each etiqueta in todasEtiquetas
+                                            - const estaSeleccionada = publicacion.etiquetas && publicacion.etiquetas.some(e => e.id === etiqueta.id)
+                                            if estaSeleccionada
+                                                .col-md-6.mb-2
+                                                    .form-check
+                                                        input.form-check-input(
+                                                            type="checkbox" 
+                                                            name="etiquetas" 
+                                                            value=etiqueta.id 
+                                                            id=`etiqueta_${etiqueta.id}`
+                                                            checked
+                                                        )
+                                                        label.form-check-label(for=`etiqueta_${etiqueta.id}`) #{etiqueta.nombre}
+                                    if !publicacion.etiquetas || publicacion.etiquetas.length === 0
+                                        p.text-muted.mb-0 No hay etiquetas seleccionadas
 
-            button(type="submit") Guardar cambios
-            a(href=`/publicaciones/${publicacion.id}`) Cancelar
+                            // Botones
+                            hr
+                            .d-flex.gap-3.justify-content-end
+                                a.btn.btn-outline-secondary.rounded-pill.px-4(href=`/publicaciones/${publicacion.id}`)
+                                    i.bi.bi-x-circle.me-1
+                                    | Cancelar
+                                button.btn.btn-warning.rounded-pill.px-4(type="submit")
+                                    i.bi.bi-check-circle.me-1
+                                    | Guardar cambios
