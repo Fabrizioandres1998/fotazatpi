@@ -486,17 +486,14 @@ block content
                             this.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> No me interesa';
                             this.classList.remove('btn-outline-success');
                             this.classList.add('btn-outline-secondary');
-                            mostrarMensaje('votosAlert', 'Ya no te interesa esta publicacion', 'info');
                         } else {
                             this.innerHTML = '<i class="bi bi-hand-thumbs-up"></i> Me interesa';
                             this.classList.remove('btn-outline-secondary');
                             this.classList.add('btn-outline-success');
-                            mostrarMensaje('votosAlert', 'Te interesa esta publicacion', 'success');
                         }
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    mostrarMensaje('votosAlert', 'Error al procesar la solicitud', 'danger');
                 }
             });
         }

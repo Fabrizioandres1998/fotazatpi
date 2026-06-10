@@ -137,17 +137,23 @@ http://localhost:3000
 ### Moderador
 
 ```txt
-Usuario: moderador
-Contraseña: [completar]
+Mail: moderador@gmail.com
+Contraseña: moderador123
 ```
 
 ### Usuario común
 
 ```txt
-Usuario: usuario1
-Contraseña: [completar]
+Mail: fabrizioandres98@gmail.com
+Contraseña: 123456
 ```
 
+### Usuario común
+
+```txt
+Mail: vati77@gmail.com
+Contraseña: 123456
+```
 ---
 
 ## Despliegue
