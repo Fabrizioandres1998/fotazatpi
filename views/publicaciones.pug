@@ -48,6 +48,30 @@ block content
                                         each etiq in pub.etiquetas
                                             a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
 
+                                // Mostrar promedio y cantidad de votos con estrellitas
+                                if pub.valoraciones && pub.valoraciones.length > 0
+                                    .mt-2
+                                        - const suma = pub.valoraciones.reduce((acc, v) => acc + v.puntaje, 0);
+                                        - const promedio = suma / pub.valoraciones.length;
+                                        - const estrellasLlenas = Math.floor(promedio);
+                                        - const tieneMedia = (promedio % 1) >= 0.5;
+                                        .d-flex.align-items-center.gap-2
+                                            .text-warning
+                                                - for (let i = 1; i <= 5; i++)
+                                                    if i <= estrellasLlenas
+                                                        i.bi.bi-star-fill
+                                                    else if i === estrellasLlenas + 1 && tieneMedia
+                                                        i.bi.bi-star-half
+                                                    else
+                                                        i.bi.bi-star
+                                            span
+                                                strong #{promedio.toFixed(1)}
+                                                |  (#{pub.valoraciones.length} voto#{pub.valoraciones.length !== 1 ? 's' : ''})
+                                else
+                                    .mt-2.text-muted
+                                        i.bi.bi-star
+                                        |  Sin valoraciones
+
                                 if pub.Usuario
                                     small.text-muted
                                         a(href=`/perfil/${pub.Usuario.username}`)

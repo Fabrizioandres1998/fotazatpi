@@ -57,7 +57,7 @@ Aplicación web para compartir imagenes en línea desarrollada con Node.js.
 - Valorar publicaciones (1-5 puntos)
 - Sistema de comentarios
 - Etiquetas para organizar contenido
-- Me interesa (con AJAX)
+- Me interesa
 - Colecciones privadas para guardar publicaciones
 - Buscador de publicaciones y usuarios
 
@@ -66,7 +66,7 @@ Aplicación web para compartir imagenes en línea desarrollada con Node.js.
 - Reportar publicaciones (spam, violencia, odio, copyright)
 - Reportar comentarios
 - Panel de moderador para gestionar reportes
-- Eliminación automática de publicaciones con 3+ reportes
+- Eliminación automática de publicaciones con 3+ reportes (se dan de baja y se pueden reactivar desde la bd)
 
 ### Interacción social
 
@@ -77,7 +77,6 @@ Aplicación web para compartir imagenes en línea desarrollada con Node.js.
 ### Experiencia de usuario
 
 - Interfaz básica hecha con Bootstrap
-- Peticiones AJAX para acciones sin recarga de página
 - Modales interactivos
 - Carrusel de imágenes
 
@@ -87,18 +86,24 @@ Aplicación web para compartir imagenes en línea desarrollada con Node.js.
 
 ### 1. Clonar repositorio
 
-````bash
-git clone URL_DEL_REPO
-cd fotaza
+```bash
+git clone https://github.com/Fabrizioandres1998/fotazatpi
+cd fotazatpi
+```
 
 ### 2. Instalar dependencias
 
 ```bash
 npm install
-````
----
+```
 
-### 3. Configurar variables de entorno
+### 3. Inicializar la base de datos
+
+```bash
+npm run db:init
+```
+
+### 4. Configurar variables de entorno
 
 Crear un archivo `.env` en la raíz del proyecto utilizando como referencia el archivo `.env.example`.
 
@@ -112,18 +117,6 @@ DB_USER=root
 DB_PASSWORD=tu_password
 SESSION_SECRET=tu_clave_secreta
 ```
-
----
-
-### 4. Inicializar la base de datos
-
-Ejecutar las migraciones para crear las tablas necesarias:
-
-```bash
-npx sequelize-cli db:migrate
-```
-
----
 
 ### 5. Iniciar la aplicación
 

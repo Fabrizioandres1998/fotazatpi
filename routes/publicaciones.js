@@ -43,27 +43,87 @@ router.get('/', async (req, res) => {
         } else {
             const isLoggedIn = req.session && req.session.id_usuario;
 
-            // Buscar publicaciones
+            // obtener publicaciones con sus valoraciones
+            let publicacionesRaw;
             if (!isLoggedIn) {
-                publicaciones = await Publicacion.findAll({
+                publicacionesRaw = await Publicacion.findAll({
                     where: whereCondition,
                     include: [
                         { model: Usuario },
-                        { model: Imagen, as: "imagenes", where: { licencia: "sin_copyright" } }
+                        { model: Imagen, as: "imagenes", where: { licencia: "sin_copyright" } },
+                        { model: Valoracion, as: 'valoraciones' }
                     ]
                 });
             } else {
-                publicaciones = await Publicacion.findAll({
+                publicacionesRaw = await Publicacion.findAll({
                     where: whereCondition,
                     include: [
                         { model: Imagen, as: "imagenes" },
                         { model: Usuario },
-                        { model: Etiqueta, as: "etiquetas" }
+                        { model: Etiqueta, as: "etiquetas" },
+                        { model: Valoracion, as: 'valoraciones' }
                     ]
                 });
             }
 
-            // buscar usuarios
+            // calcular puntaje por promedio y cantidad de votos
+            const conPuntaje = publicacionesRaw.map(pub => {
+                const valoraciones = pub.valoraciones || [];
+                const cantidad = valoraciones.length;
+                let promedio = 0;
+
+                if (cantidad > 0) {
+                    const suma = valoraciones.reduce((acc, v) => acc + v.puntaje, 0);
+                    promedio = suma / cantidad;
+                }
+
+                const puntaje = (promedio * 0.7) + (Math.log(cantidad + 1) * 0.3 * (5 / Math.log(6)));
+
+                return {
+                    ...pub.dataValues,
+                    score: puntaje,
+                    createdAt: pub.createdAt
+                };
+            });
+
+            // ordenar por puntaje
+            conPuntaje.sort((a, b) => b.score - a.score);
+
+            // obtener ultimas 5 publicaciones nuevas
+            const nuevas = publicacionesRaw
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(0, 5)
+                .map(pub => ({
+                    ...pub.dataValues,
+                    score: 0,
+                    createdAt: pub.createdAt
+                }));
+
+            // mezclar populares y nuevas (balance)
+            const populares = [...conPuntaje];
+            const nuevasIds = new Set(nuevas.map(p => p.id));
+            const popularesSinNuevas = populares.filter(p => !nuevasIds.has(p.id));
+
+            const resultado = [];
+            let idxPop = 0;
+            let idxNue = 0;
+
+            while (idxPop < popularesSinNuevas.length || idxNue < nuevas.length) {
+                for (let i = 0; i < 2 && idxPop < popularesSinNuevas.length; i++) {
+                    resultado.push(popularesSinNuevas[idxPop++]);
+                }
+                if (idxNue < nuevas.length) {
+                    resultado.push(nuevas[idxNue++]);
+                }
+            }
+
+            while (idxPop < popularesSinNuevas.length) {
+                resultado.push(popularesSinNuevas[idxPop++]);
+            }
+
+            publicaciones = resultado;
+
+            // buscar usuarios si no hay publicaciones
             if (busqueda && busqueda.trim() !== '' && publicaciones.length === 0) {
                 usuarios = await Usuario.findAll({
                     where: {
@@ -82,8 +142,8 @@ router.get('/', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error en /publicaciones:', error);
-        res.status(500).send("Error al cargar publicaciones: " + error.message);
+        console.error('error en /publicaciones:', error);
+        res.status(500).send("error al cargar publicaciones: " + error.message);
     }
 });
 
