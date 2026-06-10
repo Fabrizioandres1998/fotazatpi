@@ -225,8 +225,18 @@ router.post('/:id/comentario', authMiddleware, async (req, res) => {
             return res.status(401).json({ error: 'No autorizado' });
         }
 
+        // Verificar si los comentarios estan cerrados
+        const publicacion = await Publicacion.findByPk(id);
+        if (!publicacion) {
+            return res.status(404).json({ error: 'Publicacion no encontrada' });
+        }
+
+        if (publicacion.comentarios_cerrados) {
+            return res.status(403).json({ error: 'Los comentarios estan cerrados para esta publicacion' });
+        }
+
         if (!texto || texto.trim() === '') {
-            return res.status(400).json({ error: 'El comentario no puede estar vacío' });
+            return res.status(400).json({ error: 'El comentario no puede estar vacio' });
         }
 
         const nuevoComentario = await comentario.create({
@@ -364,6 +374,38 @@ router.post('/:id/eliminar', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send("Error al eliminar la publicacion");
+    }
+});
+
+// alternar comentariosabrir/cerrar
+router.post('/:id/toggle-comentarios', authMiddleware, async (req, res) => {
+    try {
+        const publicacionId = req.params.id;
+        const id_usuario = req.session.id_usuario;
+
+        const publicacion = await Publicacion.findByPk(publicacionId);
+
+        if (!publicacion) {
+            return res.status(404).json({ error: 'Publicacion no encontrada' });
+        }
+
+        // solo el autor puede hacer esto
+        if (publicacion.id_usuario !== id_usuario) {
+            return res.status(403).json({ error: 'No autorizado' });
+        }
+
+        const nuevoEstado = !publicacion.comentarios_cerrados;
+        await publicacion.update({ comentarios_cerrados: nuevoEstado });
+
+        res.json({
+            success: true,
+            comentarios_cerrados: nuevoEstado,
+            message: nuevoEstado ? 'Comentarios cerrados' : 'Comentarios abiertos'
+        });
+
+    } catch (error) {
+        console.error('Error al cambiar estado de comentarios:', error);
+        res.status(500).json({ error: 'Error al procesar la solicitud' });
     }
 });
 

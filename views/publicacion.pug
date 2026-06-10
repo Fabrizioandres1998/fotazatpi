@@ -116,6 +116,25 @@ block content
                                     i.bi.bi-plus-circle
                                     |  Crear nueva coleccion
 
+            // BOTON CERRAR/ABRIR COMENTARIOS para el autor
+            if session && session.id_usuario && publicacion.id_usuario === session.id_usuario
+                .mt-3
+                    button.btn.btn-sm(id="btnToggleComentarios" data-id=publicacion.id class=publicacion.comentarios_cerrados ? 'btn-warning' : 'btn-success')
+                        i.bi.bi-chat-dots
+                        if publicacion.comentarios_cerrados
+                            |  Abrir comentarios
+                        else
+                            |  Cerrar comentarios
+
+                    if publicacion.comentarios_cerrados
+                        span.ms-2.text-muted
+                            i.bi.bi-lock
+                            |  Comentarios cerrados
+                    else
+                        span.ms-2.text-muted
+                            i.bi.bi-unlock
+                            |  Comentarios abiertos
+
             // COMENTARIOS
             .row.mt-5
                 .col-12
@@ -149,14 +168,19 @@ block content
                                 p.mb-0(id="noComentariosMsg") No hay comentarios aun. ¡Se el primero en comentar!
 
                     if session && session.id_usuario
-                        .card.mt-3
-                            .card-header
-                                strong Agregar comentario
-                            .card-body
-                                form(id="formComentario")
-                                    .mb-3
-                                        textarea.form-control(id="comentarioTexto" rows="3" placeholder="Escribe tu comentario...", required)
-                                    button.btn.btn-primary(type="submit") Comentar
+                        if publicacion.comentarios_cerrados
+                            .alert.alert-warning.mt-3
+                                i.bi.bi-lock
+                                |  Los comentarios estan cerrados para esta publicacion
+                        else
+                            .card.mt-3
+                                .card-header
+                                    strong Agregar comentario
+                                .card-body
+                                    form(id="formComentario")
+                                        .mb-3
+                                            textarea.form-control(id="comentarioTexto" rows="3" placeholder="Escribe tu comentario...", required)
+                                        button.btn.btn-primary(type="submit") Comentar
                     else
                         .alert.alert-info.mt-3
                             p.mb-0 
@@ -659,5 +683,41 @@ block content
                         this.disabled = false;
                     }
                 });
+            });
+        }
+        // toggle comentarios (abrir/cerrar)
+        const btnToggleComentarios = document.getElementById('btnToggleComentarios');
+        if (btnToggleComentarios) {
+            btnToggleComentarios.addEventListener('click', async function() {
+                const publicacionId = this.dataset.id;
+
+                const textoOriginal = this.innerHTML;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                this.disabled = true;
+
+                try {
+                    const response = await fetch(`/publicaciones/${publicacionId}/toggle-comentarios`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        mostrarMensaje('votosAlert', data.message, 'success');
+
+                        // Recargar para actualizar el estado
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        mostrarMensaje('votosAlert', data.error || 'Error al procesar', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    mostrarMensaje('votosAlert', 'Error al procesar la solicitud', 'danger');
+                } finally {
+                    this.disabled = false;
+                }
             });
         }

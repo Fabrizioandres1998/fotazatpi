@@ -44,6 +44,10 @@ module.exports = (sequelize, DataTypes) => {
         model: 'usuario',
         key: 'id'
       }
+    },
+    comentarios_cerrados: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     }
   }, {
     sequelize,
