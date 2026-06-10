@@ -1,4 +1,4 @@
-# Fotaza 
+# Fotaza
 
 Trabajo práctico integrador de Programación Web II.
 
@@ -63,7 +63,7 @@ Aplicación web para compartir imagenes en línea desarrollada con Node.js.
 
 ### Reportes y moderación
 
-- Reportar publicaciones 
+- Reportar publicaciones
 - Reportar comentarios
 - Panel de moderador para gestionar reportes
 - Eliminación automática de publicaciones con 3+ reportes (se dan de baja y se pueden reactivar desde la bd)
@@ -97,13 +97,7 @@ cd fotazatpi
 npm install
 ```
 
-### 3. Inicializar la base de datos
-
-```bash
-npm run db:init
-```
-
-### 4. Configurar variables de entorno
+### 3. Configurar variables de entorno
 
 Crear un archivo `.env` en la raíz del proyecto utilizando como referencia el archivo `.env.example`.
 
@@ -118,7 +112,45 @@ DB_PASSWORD=tu_password
 SESSION_SECRET=tu_clave_secreta
 ```
 
-### 5. Iniciar la aplicación
+### 4. Crear la base de datos
+
+Instalar MySQL Server si no se encuentra instalado en el sistema.
+
+Ingresar al cliente MySQL:
+
+```bash
+mysql -u tu_usuario -p
+```
+
+Crear una base de datos vacía llamada `fotaza`:
+
+```sql
+CREATE DATABASE fotaza;
+```
+
+Verificar que fue creada:
+
+```sql
+SHOW DATABASES;
+```
+
+Salir del cliente MySQL:
+
+```sql
+EXIT;
+```
+
+También puede crearse utilizando MySQL Workbench.
+
+### 5. Inicializar la base de datos
+
+Ejecutar las migraciones para crear todas las tablas necesarias:
+
+```bash
+npm run db:init
+```
+
+### 6. Iniciar la aplicación
 
 ```bash
 npm start
@@ -168,6 +200,7 @@ Contraseña: 654321
 Mail: chino123@gmail.com
 Contraseña: hola123
 ```
+
 ---
 
 ## Despliegue
@@ -179,12 +212,15 @@ https://fotazatpi-production.up.railway.app/
 ```
 
 ---
+
 ## Problemas encontrados y soluciones
 
 1. **Railway no inyectaba variables de entorno** → Se agregaron manualmente en el panel.
 2. **`sequelize-cli` sin permisos en Railway** → Se instaló globalmente dentro del contenedor.
 3. **Sesiones no persistentes en deploy** → Se creó la tabla `Sessions` manualmente en la bd de Railway.
+
 ---
+
 ## Base de datos
 
 El proyecto incluye un archivo SQL de respaldo en la raíz del repositorio que permite recrear la base de datos con información de prueba.
