@@ -1,4 +1,4 @@
-# Fotaza 2
+# Fotaza 
 
 Proyecto final de Programación Web II.
 
@@ -153,6 +153,20 @@ Contraseña: 123456
 ```txt
 Mail: vati77@gmail.com
 Contraseña: 123456
+```
+
+### Usuario común
+
+```txt
+Mail: prueba12@gmail.com
+Contraseña: 654321
+```
+
+### Usuario común
+
+```txt
+Mail: chino123@gmail.com
+Contraseña: hola123
 ```
 ---
 
