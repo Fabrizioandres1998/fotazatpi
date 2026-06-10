@@ -96,7 +96,7 @@ block content
                     span.ms-2.text-muted(id=`interesados-${publicacion.id}`) 
                         | #{interesadosCount || 0} interesados
 
-            // GUARDAR EN COLECCION - VERSION AJAX
+            // GUARDAR EN COLECCION
             if session && session.id_usuario && misColecciones
                 .mt-3
                     .dropdown
@@ -682,7 +682,7 @@ block content
                 });
             });
         }
-        // toggle comentarios (abrir/cerrar)
+        // toggle comentarios abrir/cerrar
         const btnToggleComentarios = document.getElementById('btnToggleComentarios');
         if (btnToggleComentarios) {
             btnToggleComentarios.addEventListener('click', async function() {

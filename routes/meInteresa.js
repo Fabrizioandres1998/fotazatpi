@@ -3,7 +3,7 @@ const router = express.Router();
 const { me_interesa, Publicacion, notificacion } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// funcion para crear notificacion (ahora con id_publicacion)
+// funcion para crear notificacion 
 async function crearNotificacion(id_usuario_destino, id_usuario_origen, id_publicacion, mensaje) {
     try {
         await notificacion.create({
@@ -18,7 +18,7 @@ async function crearNotificacion(id_usuario_destino, id_usuario_origen, id_publi
     }
 }
 
-// marcar o quitar me interesa (AJAX)
+// marcar o quitar me interesa 
 router.post('/publicacion/:id', authMiddleware, async (req, res) => {
     try {
         const id_publicacion = req.params.id;

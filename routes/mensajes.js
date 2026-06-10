@@ -3,7 +3,7 @@ const router = express.Router();
 const { mensaje, Publicacion, Usuario, notificacion } = require('../models');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// Función para crear notificación
+// funcion para crear notificacion
 async function crearNotificacion(id_usuario_destino, id_usuario_origen, mensaje) {
     try {
         await notificacion.create({
@@ -17,7 +17,7 @@ async function crearNotificacion(id_usuario_destino, id_usuario_origen, mensaje)
     }
 }
 
-// Formulario para enviar mensaje (desde notificación)
+// formulario para enviar mensaje desde notificacin
 router.get('/nuevo/:id_destinatario', authMiddleware, async (req, res) => {
     try {
         const id_destinatario = req.params.id_destinatario;
@@ -58,7 +58,7 @@ router.post('/enviar/:id_destinatario', authMiddleware, async (req, res) => {
             mensaje: texto.trim()
         });
 
-        // Crear notificación para el destinatario
+        // ccrear notificacion para el destinatario
         const remitente = await Usuario.findByPk(id_remitente);
         await crearNotificacion(
             id_destinatario,
@@ -73,7 +73,7 @@ router.post('/enviar/:id_destinatario', authMiddleware, async (req, res) => {
     }
 });
 
-// Ver conversación con un usuario (desde notificación "te envió un mensaje")
+// ver conversacion con un usuario desde notificación
 router.get('/ver/:id_usuario', authMiddleware, async (req, res) => {
     try {
         const { Op } = require('sequelize');

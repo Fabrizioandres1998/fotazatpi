@@ -14,7 +14,7 @@ block content
                 | Publicaciones con la etiqueta: #{filtro}
                 a.ms-3(href="/publicaciones") Ver todas
 
-        // Mostrar usuarios encontrados
+        // mostrar usuarios encontrados
         if usuarios && usuarios.length > 0
             .card.mb-4
                 .card-header
@@ -27,7 +27,7 @@ block content
                                     i.bi.bi-person-circle
                                     |  #{usuario.username}
 
-        // Mostrar publicaciones
+        // mostrar publicaciones
         if publicaciones && publicaciones.length > 0
             .row
                 each pub in publicaciones
@@ -48,7 +48,7 @@ block content
                                         each etiq in pub.etiquetas
                                             a.badge.bg-primary.me-1.text-decoration-none(href=`/publicaciones?etiqueta=${etiq.nombre}`) #{etiq.nombre}
 
-                                // Mostrar promedio y cantidad de votos con estrellitas
+                                // mostrar promedio y cantidad de votos con estrellitas
                                 if pub.valoraciones && pub.valoraciones.length > 0
                                     .mt-2
                                         - const suma = pub.valoraciones.reduce((acc, v) => acc + v.puntaje, 0);

@@ -1,6 +1,6 @@
 # Fotaza 
 
-Proyecto final de Programación Web II.
+Trabajo práctico integrador de Programación Web II.
 
 Aplicación web para compartir imagenes en línea desarrollada con Node.js.
 
@@ -23,7 +23,7 @@ Aplicación web para compartir imagenes en línea desarrollada con Node.js.
 
 ## Modelo de datos
 
-- `usuario` – Usuarios del sistema, con roles (común o moderador)
+- `usuario` – Usuarios del sistema, con roles (usuario o moderador)
 - `publicacion` – Publicaciones creadas por los usuarios
 - `imagen` – Imágenes asociadas a cada publicación
 - `comentario` – Comentarios en las publicaciones
@@ -63,7 +63,7 @@ Aplicación web para compartir imagenes en línea desarrollada con Node.js.
 
 ### Reportes y moderación
 
-- Reportar publicaciones (spam, violencia, odio, copyright)
+- Reportar publicaciones 
 - Reportar comentarios
 - Panel de moderador para gestionar reportes
 - Eliminación automática de publicaciones con 3+ reportes (se dan de baja y se pueden reactivar desde la bd)
@@ -76,7 +76,7 @@ Aplicación web para compartir imagenes en línea desarrollada con Node.js.
 
 ### Experiencia de usuario
 
-- Interfaz básica hecha con Bootstrap
+- Interfaz básica estándar y funcional hecha con Bootstrap
 - Modales interactivos
 - Carrusel de imágenes
 
@@ -179,7 +179,12 @@ https://fotazatpi-production.up.railway.app/
 ```
 
 ---
+## Problemas encontrados y soluciones
 
+1. **Railway no inyectaba variables de entorno** → Se agregaron manualmente en el panel.
+2. **`sequelize-cli` sin permisos en Railway** → Se instaló globalmente dentro del contenedor.
+3. **Sesiones no persistentes en deploy** → Se creó la tabla `Sessions` manualmente en la bd de Railway.
+---
 ## Base de datos
 
 El proyecto incluye un archivo SQL de respaldo en la raíz del repositorio que permite recrear la base de datos con información de prueba.
@@ -191,14 +196,16 @@ Este respaldo incluye:
 - Etiquetas
 - Comentarios
 - Valoraciones
-- Configuración necesaria para probar la aplicación
+- Colecciones
+- Chats
+- Notificaciones
 
 ---
 
 ## Estructura del proyecto
 
 ```txt
-fotaza/
+fotazatpi/
 ├── bin/
 ├── config/
 ├── middlewares/
@@ -208,6 +215,8 @@ fotaza/
 ├── routes/
 ├── views/
 ├── app.js
+├── backup.sql
+├── .env.example
 ├── package.json
 └── README.md
 ```

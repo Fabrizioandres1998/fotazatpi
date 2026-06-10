@@ -18,7 +18,7 @@ async function crearNotificacion(id_usuario_destino, id_usuario_origen, mensaje)
     }
 }
 
-// votar una publicacion (ajax)
+// votar una publicacion 
 router.post('/publicacion/:id', authMiddleware, async (req, res) => {
     try {
         const id_publicacion = req.params.id;
