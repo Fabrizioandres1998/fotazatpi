@@ -112,9 +112,11 @@ DB_PASSWORD=tu_password
 SESSION_SECRET=tu_clave_secreta
 ```
 
-### 4. Crear la base de datos
+### 4. Preparar la base de datos
 
-Instalar MySQL Server si no se encuentra instalado en el sistema.
+Existen dos formas de inicializar la base de datos:
+
+#### Opción A: Crear una base de datos vacía
 
 Ingresar al cliente MySQL:
 
@@ -142,15 +144,27 @@ EXIT;
 
 También puede crearse utilizando MySQL Workbench.
 
-### 5. Inicializar la base de datos
-
-Ejecutar las migraciones para crear todas las tablas necesarias:
+Una vez creada la base de datos, ejecutar las migraciones para generar todas las tablas:
 
 ```bash
 npm run db:init
 ```
 
-### 6. Iniciar la aplicación
+---
+
+#### Opción B: Restaurar el backup provisto
+
+Crear previamente una base de datos vacía llamada `fotaza`.
+
+Luego ejecutar el backup desde una terminal:
+
+```bash
+mysql -u tu_usuario -p fotaza < backup.sql
+```
+
+Si la restauración fue exitosa, la base de datos quedará cargada con toda la información de prueba, incluyendo usuarios, publicaciones, comentarios y demás datos necesarios para utilizar la aplicación.
+
+### 5. Iniciar la aplicación
 
 ```bash
 npm start
@@ -164,7 +178,7 @@ http://localhost:3000
 
 ---
 
-## Usuarios de prueba
+## Usuarios de prueba (disponibles únicamente en el backup)
 
 ### Moderador
 
