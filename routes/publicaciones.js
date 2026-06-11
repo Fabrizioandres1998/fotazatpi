@@ -424,29 +424,28 @@ router.post('/:id/eliminar', async (req, res) => {
         });
 
         if (!publicacion) {
-            return res.status(404).send("Publicación no encontrada");
+            return res.status(404).json({ error: 'Publicacion no encontrada' });
         }
 
         if (publicacion.id_usuario !== req.session.id_usuario) {
-            return res.status(403).send("No autorizado");
+            return res.status(403).json({ error: 'No autorizado' });
         }
 
-        // eliminar las imagenes asociadas primero
         if (publicacion.imagenes && publicacion.imagenes.length > 0) {
             for (const imagen of publicacion.imagenes) {
                 await imagen.destroy();
             }
         }
 
-        // eliminar la publicacion (ahora sin imagenes asociadas)
         await publicacion.destroy();
 
-        res.redirect('/perfil');
+        res.json({ success: true });
     } catch (error) {
         console.error('Error al eliminar la publicacion:', error);
-        res.status(500).send("Error al eliminar la publicacion");
+        res.status(500).json({ error: 'Error al eliminar la publicacion' });
     }
 });
+
 // alternar comentariosabrir/cerrar
 router.post('/:id/toggle-comentarios', authMiddleware, async (req, res) => {
     try {

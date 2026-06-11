@@ -85,10 +85,9 @@ block content
                                                 i.bi.bi-pencil-square
                                                 |  Editar
 
-                                            form.d-inline(method="POST" action=`/publicaciones/${pub.id}/eliminar` onsubmit="return confirm('¿Eliminar esta publicacion?')")
-                                                button.btn.btn-danger.btn-sm(type="submit")
-                                                    i.bi.bi-trash
-                                                    |  Eliminar
+                                            button.btn.btn-danger.btn-sm.eliminar-publicacion(type="button" data-id=pub.id)
+                                                i.bi.bi-trash
+                                                |  Eliminar
 
                                     .mt-2
                                         a.btn.btn-outline-primary.btn-sm(href=`/publicaciones/${pub.id}`)
@@ -127,7 +126,7 @@ block content
                 .modal-footer
                     button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cerrar
 
-        // Modal de Seguidos
+    // Modal de Seguidos
     .modal.fade(id="seguidosModal" tabindex="-1" aria-labelledby="seguidosModalLabel" aria-hidden="true")
         .modal-dialog
             .modal-content
@@ -149,6 +148,19 @@ block content
                 .modal-footer
                     button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cerrar
 
+    // MODAL DE CONFIRMACION ELIMINAR PUBLICACION
+    .modal.fade(id="modalConfirmarEliminarPublicacion" tabindex="-1" aria-hidden="true")
+        .modal-dialog.modal-sm
+            .modal-content
+                .modal-header
+                    h5.modal-title Confirmar accion
+                    button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+                .modal-body
+                    p(id="confirmacionPublicacionMensaje") ¿Eliminar esta publicacion? Esta accion no se puede deshacer.
+                .modal-footer
+                    button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancelar
+                    button.btn.btn-danger(type="button" id="btnConfirmarEliminarPublicacion") Eliminar
+
     // ALERTA DE PUBLICACIONES ELIMINADAS 
     if publicacionesEliminadas > 0
         .alert.alert-warning.mt-2
@@ -157,8 +169,8 @@ block content
             if publicacionesEliminadas >= 3
                 | Tu cuenta está inactiva. Contacta al administrador.
 
-    //seguir y dejar de seguir ajax
     script.
+        // seguir y dejar de seguir ajax
         const btnSeguir = document.getElementById('btnSeguir');
         if (btnSeguir) {
             btnSeguir.addEventListener('click', async function() {
@@ -178,7 +190,6 @@ block content
                     const data = await response.json();
 
                     if (data.success) {
-                        // actualizar boton segun data.siguiendo
                         if (data.siguiendo) {
                             this.innerHTML = 'Dejar de seguir';
                             this.classList.remove('btn-primary');
@@ -191,13 +202,10 @@ block content
                             this.dataset.accion = 'seguir';
                         }
 
-                        // actualizar contadores
                         const seguidoresSpan = document.querySelector('.col-4:nth-child(2) strong');
                         const seguidosSpan = document.querySelector('.col-4:nth-child(3) strong');
                         if (seguidoresSpan) seguidoresSpan.textContent = data.seguidoresCount;
                         if (seguidosSpan) seguidosSpan.textContent = data.seguidosCount;
-
-                        console.log('Estado actualizado - siguiendo:', data.siguiendo);
                     } else {
                         alert(data.error || 'Error al procesar la solicitud');
                     }
@@ -206,6 +214,65 @@ block content
                     alert('Error al procesar la solicitud');
                 } finally {
                     this.disabled = false;
+                }
+            });
+        }
+
+        // eliminar publicacion con confirmacion modal
+        let publicacionAEliminar = null;
+
+        const modalEliminarPublicacion = document.getElementById('modalConfirmarEliminarPublicacion');
+        const btnConfirmarEliminar = document.getElementById('btnConfirmarEliminarPublicacion');
+
+        document.querySelectorAll('.eliminar-publicacion').forEach(btn => {
+            btn.addEventListener('click', function() {
+                publicacionAEliminar = this.dataset.id;
+                const mensaje = document.getElementById('confirmacionPublicacionMensaje');
+                if (mensaje) mensaje.textContent = '¿Eliminar esta publicacion? Esta accion no se puede deshacer.';
+                const modal = new bootstrap.Modal(modalEliminarPublicacion);
+                modal.show();
+            });
+        });
+
+        if (btnConfirmarEliminar) {
+            btnConfirmarEliminar.addEventListener('click', async function() {
+                if (!publicacionAEliminar) return;
+
+                const btnOriginal = document.querySelector(`.eliminar-publicacion[data-id="${publicacionAEliminar}"]`);
+                const textoOriginal = btnOriginal ? btnOriginal.innerHTML : 'Eliminar';
+                if (btnOriginal) {
+                    btnOriginal.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                    btnOriginal.disabled = true;
+                }
+
+                try {
+                    const response = await fetch(`/publicaciones/${publicacionAEliminar}/eliminar`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success || response.redirected) {
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Error al eliminar publicacion');
+                        if (btnOriginal) {
+                            btnOriginal.innerHTML = textoOriginal;
+                            btnOriginal.disabled = false;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al eliminar publicacion');
+                    if (btnOriginal) {
+                        btnOriginal.innerHTML = textoOriginal;
+                        btnOriginal.disabled = false;
+                    }
+                } finally {
+                    const modal = bootstrap.Modal.getInstance(modalEliminarPublicacion);
+                    if (modal) modal.hide();
+                    publicacionAEliminar = null;
                 }
             });
         }
