@@ -1,16 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { Publicacion, Usuario, Imagen, reporte_publicacion } = require('../models');
-const { sequelize } = require('../models');
+const { Publicacion, Usuario, Imagen, Comentario, Valoracion, reporte_publicacion, sequelize } = require('../models');
 const moderadorMiddleware = require('../middlewares/moderadorMiddleware');
 
-// Aplicar middleware a todas las rutas de moderador
+// aplicar middleware a todas las rutas de moderador
 router.use(moderadorMiddleware);
 
-// Panel principal publicaciones con 3 o mas reportes pendientes
+// panel principal publicaciones con 3 o mas reportes pendientes
 router.get('/reportes', async (req, res) => {
     try {
-        // Obtener todas las publicaciones que tienen reportes
+        // obtener todas las publicaciones que tienen reportes
         const publicacionesConReportes = await Publicacion.findAll({
             include: [
                 { model: Usuario, attributes: ['id', 'username'] },
@@ -18,7 +17,7 @@ router.get('/reportes', async (req, res) => {
             ]
         });
 
-        // Filtrar las que tienen 3 o ms reportes
+        // filtrar las que tienen 3 o mas reportes
         const publicacionesReportadas = [];
         for (const pub of publicacionesConReportes) {
             const cantidadReportes = await reporte_publicacion.count({
@@ -38,12 +37,12 @@ router.get('/reportes', async (req, res) => {
 
         res.render('moderador/reportes', {
             publicaciones: publicacionesReportadas,
-            titulo: 'Publicaciones con reportes pendientes'
+            titulo: 'publicaciones con reportes pendientes'
         });
 
     } catch (error) {
         console.error(error);
-        res.status(500).send('Error al cargar el panel de reportes');
+        res.status(500).send('error al cargar el panel de reportes');
     }
 });
 
@@ -58,7 +57,7 @@ router.get('/reportes/publicacion/:id', async (req, res) => {
         });
 
         if (!publicacion) {
-            req.flash('error', 'Publicación no encontrada');
+            req.flash('error', 'publicacion no encontrada');
             return res.redirect('/moderador/reportes');
         }
 
@@ -71,87 +70,106 @@ router.get('/reportes/publicacion/:id', async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.status(500).send('Error al cargar la publicación');
+        res.status(500).send('error al cargar la publicacion');
     }
 });
 
-// Dar de baja publicacion 
+// dar de baja publicacion (eliminar)
 router.post('/reportes/publicacion/:id/eliminar', async (req, res) => {
+    const transaction = await sequelize.transaction();
+
     try {
-        const publicacion = await Publicacion.findByPk(req.params.id);
+        const publicacionId = req.params.id;
+
+        // obtener publicacion con el id_usuario
+        const publicacion = await Publicacion.findByPk(publicacionId, { transaction });
         if (!publicacion) {
-            return res.status(404).json({ error: 'Publicación no encontrada' });
+            await transaction.rollback();
+            return res.status(404).json({ error: 'publicacion no encontrada' });
         }
 
         const id_usuario = publicacion.id_usuario;
 
-        // Eliminar publicacion
-        await publicacion.destroy();
+        // 1. eliminar reportes asociados primero
+        await reporte_publicacion.destroy({
+            where: { id_publicacion: publicacionId },
+            transaction
+        });
 
-        // Actualizar estado de reportes a resuelto
-        await reporte_publicacion.update(
-            { estado: 'resuelto' },
-            { where: { id_publicacion: req.params.id } }
-        );
+        // 2. eliminar imagenes de la publicacion
+        await Imagen.destroy({
+            where: { id_publicacion: publicacionId },
+            transaction
+        });
 
-        // incrementar contador de publicaciones eliminadas del usuario
-        const usuario = await Usuario.findByPk(id_usuario);
+        // 3. eliminar comentarios de la publicacion
+        if (Comentario) {
+            await Comentario.destroy({
+                where: { id_publicacion: publicacionId },
+                transaction
+            });
+        }
+
+        // 4. eliminar valoraciones de la publicacion
+        if (Valoracion) {
+            await Valoracion.destroy({
+                where: { id_publicacion: publicacionId },
+                transaction
+            });
+        }
+
+        // 5. finalmente eliminar la publicacion
+        await Publicacion.destroy({
+            where: { id: publicacionId },
+            transaction
+        });
+
+        // 6. actualizar contador de publicaciones eliminadas del usuario
+        const usuario = await Usuario.findByPk(id_usuario, { transaction });
         let mensaje = '';
 
         if (usuario) {
             const nuevasEliminadas = (usuario.publicaciones_eliminadas || 0) + 1;
             await usuario.update({
                 publicaciones_eliminadas: nuevasEliminadas
-            });
+            }, { transaction });
 
             // si llega a 3, inactivar cuenta
             if (nuevasEliminadas >= 3) {
-                await usuario.update({ activo: false });
-                mensaje = `Publicación eliminada. El usuario ${usuario.username} ha sido INACTIVADO por acumular 3 publicaciones eliminadas`;
+                await usuario.update({ activo: false }, { transaction });
+                mensaje = `publicacion eliminada. el usuario ${usuario.username} ha sido inactivado por acumular 3 publicaciones eliminadas`;
             } else {
-                mensaje = `Publicación eliminada. El usuario ${usuario.username} tiene ${nuevasEliminadas}/3 publicaciones eliminadas`;
+                mensaje = `publicacion eliminada. el usuario ${usuario.username} tiene ${nuevasEliminadas}/3 publicaciones eliminadas`;
             }
         } else {
-            mensaje = 'Publicación eliminada correctamente';
+            mensaje = 'publicacion eliminada correctamente';
         }
 
+        await transaction.commit();
         res.json({ success: true, message: mensaje });
 
     } catch (error) {
+        await transaction.rollback();
         console.error(error);
-        res.status(500).json({ error: 'Error al eliminar la publicación' });
+        res.status(500).json({ error: 'error al eliminar la publicacion: ' + error.message });
     }
 });
 
-// desestimar reportes 
+// desestimar reportes
 router.post('/reportes/publicacion/:id/desestimar', async (req, res) => {
     try {
+        // actualizar reportes pendientes a revisado
         await reporte_publicacion.update(
             { estado: 'revisado' },
-            { where: { id_publicacion: req.params.id } }
+            { where: { id_publicacion: req.params.id, estado: 'pendiente' } }
         );
 
-        res.json({ success: true, message: 'Reportes desestimados correctamente' });
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al desestimar los reportes' });
-    }
-});
-// eesestimar reportes 
-router.post('/reportes/publicacion/:id/desestimar', async (req, res) => {
-    try {
-        await reporte_publicacion.update(
-            { estado: 'revisado' },
-            { where: { id_publicacion: req.params.id } }
-        );
-
-        req.flash('success', 'Reportes desestimados correctamente');
+        req.flash('success', 'reportes desestimados correctamente');
         res.redirect('/moderador/reportes');
 
     } catch (error) {
         console.error(error);
-        req.flash('error', 'Error al desestimar los reportes');
+        req.flash('error', 'error al desestimar los reportes');
         res.redirect('/moderador/reportes');
     }
 });
