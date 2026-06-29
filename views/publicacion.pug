@@ -72,6 +72,8 @@ block content
                     strong Promedio: 
                     | #{promedio.toFixed(1)} / 5.0
                     |  (#{cantidadVotos} voto#{cantidadVotos !== 1 ? 's' : ''})
+                else if session && session.id_usuario && publicacion.id_usuario === session.id_usuario
+                    | No hay valoraciones para tu publicación aun.
                 else
                     | Sin valoraciones aun. ¡Se el primero!
 
